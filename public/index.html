@@ -1,0 +1,2695 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoalMind — Футболни Прогнози</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00FF87;
+    --green-dim: #00cc6a;
+    --dark: #0a0e0f;
+    --darker: #060809;
+    --card: #111518;
+    --card2: #161b1e;
+    --border: #1e2529;
+    --text: #e8edf0;
+    --muted: #6b7c85;
+    --accent: #ff4757;
+    --gold: #ffd32a;
+    --live: #ff4757;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    overflow-x: hidden;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--darker); }
+  ::-webkit-scrollbar-thumb { background: var(--green); border-radius: 2px; }
+
+  /* NAV */
+  nav {
+    background: rgba(6,8,9,0.95);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 62px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--green);
+  }
+
+  .logo span { color: var(--text); }
+
+  .nav-links {
+    display: flex;
+    gap: 6px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--green);
+    background: rgba(0,255,135,0.08);
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* LANGUAGE SWITCHER (dropdown) */
+  .lang-switcher {
+    position: relative;
+    margin-right: 6px;
+  }
+
+  .lang-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lang-toggle:hover { border-color: var(--green); }
+  .lang-toggle-flag { font-size: 22px; line-height: 1; }
+  .lang-toggle-arrow { font-size: 11px; color: var(--muted); }
+
+  .lang-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+    min-width: 180px;
+    max-height: 360px;
+    overflow-y: auto;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    z-index: 200;
+    display: none;
+  }
+  .lang-dropdown.open { display: block; }
+
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.12s;
+    text-align: left;
+    font-family: 'Barlow', sans-serif;
+  }
+  .lang-btn .lf { font-size: 20px; line-height: 1; }
+  .lang-btn:hover { background: rgba(0,255,135,0.08); }
+  .lang-btn.active { background: rgba(0,255,135,0.12); color: var(--green); }
+
+  html[dir="rtl"] .lang-dropdown { right: auto; left: 0; }
+  html[dir="rtl"] .lang-btn { text-align: right; }
+
+  .btn-login {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-pro {
+    background: var(--green);
+    border: none;
+    color: var(--dark);
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-pro:hover { background: var(--green-dim); }
+
+  /* HERO TICKER */
+  .ticker-bar {
+    background: var(--green);
+    padding: 7px 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ticker-inner {
+    display: flex;
+    gap: 60px;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .ticker-score { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* MAIN LAYOUT */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr 300px;
+    gap: 20px;
+    padding: 20px 0;
+  }
+
+  /* SIDEBAR LEFT */
+  .sidebar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sidebar-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .sidebar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px 16px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .league-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .league-item:hover { background: rgba(0,255,135,0.05); }
+  .league-item.active { background: rgba(0,255,135,0.08); }
+
+  .league-flag {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+  }
+
+  .league-name {
+    font-size: 13px;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .league-count {
+    font-size: 11px;
+    color: var(--green);
+    font-weight: 700;
+    background: rgba(0,255,135,0.1);
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+
+  /* CENTER CONTENT */
+  .live-loading, .live-error {
+    padding: 24px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .live-error { color: var(--accent); }
+
+  .data-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .data-badge.real { background: rgba(0,255,135,0.12); color: var(--green); }
+  .data-badge.demo { background: rgba(255,211,42,0.12); color: var(--gold); }
+
+  /* Арабски (RTL) корекции */
+  html[dir="rtl"] body { direction: rtl; }
+  html[dir="rtl"] .ticker-inner { direction: ltr; }
+  html[dir="rtl"] .nav-links { direction: rtl; }
+  html[dir="rtl"] .score, html[dir="rtl"] .score-box,
+  html[dir="rtl"] .ticker-score, html[dir="rtl"] .odd-value,
+  html[dir="rtl"] #totalOdds, html[dir="rtl"] #potentialWin { direction: ltr; unicode-bidi: embed; }
+
+  /* AUTH MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .auth-modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 380px;
+    overflow: hidden;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .auth-header {
+    padding: 20px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .auth-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1px;
+  }
+  .auth-close {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .auth-close:hover { color: var(--text); }
+
+  .auth-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 24px 0;
+  }
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    transition: all 0.15s;
+  }
+  .auth-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  .auth-body { padding: 20px 24px 24px; }
+
+  .auth-field { margin-bottom: 14px; }
+  .auth-field label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .auth-field input {
+    width: 100%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .auth-field input:focus { border-color: var(--green); }
+
+  .auth-submit {
+    width: 100%;
+    background: var(--green);
+    color: var(--dark);
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    margin-top: 4px;
+    transition: background 0.15s;
+  }
+  .auth-submit:hover { background: var(--green-dim); }
+  .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .auth-msg {
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .auth-msg.error { display: block; background: rgba(255,71,87,0.12); color: var(--accent); }
+  .auth-msg.success { display: block; background: rgba(0,255,135,0.12); color: var(--green); }
+
+  /* Потребителско меню (като си влязъл) */
+  .user-menu {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 8px 5px 5px;
+  }
+  .user-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), #00b8ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: var(--dark);
+  }
+  .user-name { font-size: 13px; font-weight: 600; }
+  .user-pro-tag {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    background: var(--gold); color: var(--dark);
+    padding: 2px 6px; border-radius: 10px;
+  }
+  .user-logout {
+    background: transparent; border: none; color: var(--muted);
+    cursor: pointer; font-size: 12px; padding: 4px 6px;
+  }
+  .user-logout:hover { color: var(--accent); }
+
+  /* AUTH MODAL край */
+
+  /* TOOL MODAL */
+  .tool-modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    overflow: hidden;
+    animation: modalIn 0.2s ease;
+  }
+  .tool-modal-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tool-modal-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: rgba(0,255,135,0.1);
+    border: 1px solid rgba(0,255,135,0.2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green);
+    flex-shrink: 0;
+  }
+  .tool-modal-icon svg { width: 24px; height: 24px; }
+  .tool-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; flex: 1; }
+  .tool-modal-body { padding: 20px 24px 24px; }
+  .tool-modal-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+  .tool-feature {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .tool-feature-dot { color: var(--green); font-weight: 700; }
+  .tool-pro-note {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: rgba(255,211,42,0.08);
+    border: 1px solid rgba(255,211,42,0.2);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--gold);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* CALCULATOR */
+  .calc-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .calc-field { flex: 1; }
+  .calc-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .calc-field input {
+    width: 100%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 12px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+  }
+  .calc-field input:focus { border-color: var(--green); }
+  .calc-result {
+    background: var(--card2);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 8px;
+    text-align: center;
+  }
+  .calc-result-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .calc-result-value { font-family: 'Bebas Neue', sans-serif; font-size: 34px; color: var(--green); line-height: 1; }
+  .calc-result-profit { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  /* TOOL MODAL край */
+
+  .center-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+  }
+
+  .tab {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--muted);
+    border: none;
+    background: transparent;
+  }
+
+  .tab.active {
+    background: var(--green);
+    color: var(--dark);
+  }
+
+  /* LIVE SECTION */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--live);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .see-all {
+    font-size: 12px;
+    color: var(--green);
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  /* MATCH CARD */
+  .match-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .match-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+
+  .match-card.live::before { background: var(--live); }
+  .match-card.high-conf::before { background: var(--green); }
+
+  .match-card:hover {
+    border-color: rgba(0,255,135,0.2);
+  }
+
+  .match-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .match-league {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .live-badge {
+    background: var(--live);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .match-time {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .match-time.live { color: var(--live); font-weight: 700; }
+
+  .match-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .team {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .team.away { flex-direction: row-reverse; text-align: right; }
+
+  .team-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .team-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .team-record {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .score-box {
+    text-align: center;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 16px;
+    min-width: 70px;
+  }
+
+  .score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: 2px;
+  }
+
+  .score.live { color: var(--live); }
+
+  .score-min {
+    font-size: 10px;
+    color: var(--live);
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* PREDICTION BAR */
+  .prediction-section {
+    background: var(--card2);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .pred-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .pred-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .pred-conf {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .odds-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .odd-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .odd-btn:hover { border-color: var(--green); }
+  .odd-btn.selected { border-color: var(--green); background: rgba(0,255,135,0.08); }
+
+  .odd-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+  .odd-value { font-size: 14px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .odd-btn.selected .odd-value { color: var(--green); }
+
+  .prob-bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    gap: 2px;
+  }
+
+  .prob-h { background: var(--green); border-radius: 3px 0 0 3px; }
+  .prob-d { background: var(--muted); }
+  .prob-a { background: var(--accent); border-radius: 0 3px 3px 0; }
+
+  .prob-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  .prob-label { font-size: 10px; color: var(--muted); }
+  .prob-label span { font-weight: 700; color: var(--text); }
+
+  /* AI INSIGHT */
+  .ai-insight {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .ai-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #00FF87, #00b8ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    color: var(--dark);
+    font-weight: 900;
+  }
+
+  .ai-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .ai-text strong { color: var(--text); }
+
+  /* STATS MINI */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .stat-pill span { color: var(--text); }
+
+  /* SIDEBAR RIGHT */
+  .sidebar-right {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* BETSLIP */
+  .betslip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .betslip-header {
+    background: var(--green);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .betslip-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--dark);
+  }
+
+  .betslip-count {
+    background: var(--dark);
+    color: var(--green);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .betslip-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .betslip-match { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .betslip-pick { font-size: 11px; color: var(--green); font-weight: 700; }
+  .betslip-odd { font-size: 12px; color: var(--muted); }
+
+  .betslip-empty {
+    padding: 28px 16px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .betslip-item {
+    position: relative;
+  }
+
+  .betslip-remove {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    padding: 0;
+  }
+
+  .betslip-remove:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .betslip-saved {
+    background: rgba(0,255,135,0.1);
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--green);
+    text-align: center;
+    font-weight: 600;
+    display: none;
+  }
+
+  .betslip-footer {
+    padding: 12px 16px;
+  }
+
+  .betslip-total {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+
+  .betslip-total strong { font-size: 16px; color: var(--green); }
+
+  .stake-input {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .stake-input input {
+    flex: 1;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+  }
+
+  .stake-input input:focus { border-color: var(--green); }
+
+  .btn-place {
+    width: 100%;
+    background: var(--green);
+    color: var(--dark);
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Barlow', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.2s;
+  }
+
+  .btn-place:hover { background: var(--green-dim); }
+
+  /* LEADERBOARD */
+  .leaderboard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .lb-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lb-header span { font-size: 14px; }
+
+  .lb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .lb-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .lb-rank.gold { color: var(--gold); }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+
+  .lb-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), #00b8ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+
+  .lb-name { flex: 1; font-size: 13px; font-weight: 600; }
+  .lb-wins { font-size: 12px; color: var(--green); font-weight: 700; }
+  .lb-roi { font-size: 11px; color: var(--muted); }
+
+  /* TOOLS WIDGET */
+  .tools-grid {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .tools-grid-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .tools-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .tool-item {
+    background: var(--card);
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: center;
+  }
+
+  .tool-item:hover { background: var(--card2); }
+
+  .tool-icon { font-size: 22px; margin-bottom: 6px; }
+  .tool-name { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+  /* PROMO BANNER */
+  .promo-banner {
+    background: linear-gradient(135deg, #0f1f15, #0a1a10);
+    border: 1px solid rgba(0,255,135,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .promo-banner::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(0,255,135,0.15), transparent 70%);
+  }
+
+  .promo-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  .promo-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .promo-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+
+  .btn-upgrade {
+    background: var(--green);
+    color: var(--dark);
+    border: none;
+    border-radius: 8px;
+    padding: 9px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    width: 100%;
+  }
+
+  /* BOTTOM TOOLS BAR */
+  .tools-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+
+  .tools-bar-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .tools-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .tool-card {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tool-card:hover {
+    border-color: var(--green);
+    transform: translateY(-2px);
+  }
+
+  .tool-card-icon {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 8px;
+    border-radius: 12px;
+    background: rgba(0,255,135,0.08);
+    border: 1px solid rgba(0,255,135,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green);
+    transition: all 0.2s;
+  }
+  .tool-card-icon svg { width: 24px; height: 24px; }
+  .tool-card:hover .tool-card-icon {
+    background: rgba(0,255,135,0.16);
+    border-color: var(--green);
+    transform: scale(1.08);
+  }
+  .tool-card-name { font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.3; }
+  .tool-card:hover .tool-card-name { color: var(--green); }
+
+  /* FORM GUIDE */
+  .form-dots {
+    display: flex;
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  .form-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .form-dot.w { background: var(--green); color: var(--dark); }
+  .form-dot.d { background: var(--muted); }
+  .form-dot.l { background: var(--accent); }
+
+  /* H2H */
+  .h2h-bar {
+    background: var(--card2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 8px;
+  }
+
+  .h2h-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .h2h-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .h2h-team { flex: 1; font-weight: 600; }
+  .h2h-team.right { text-align: right; }
+
+  .h2h-track {
+    flex: 2;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .h2h-home { background: var(--green); }
+  .h2h-draw { background: var(--muted); }
+  .h2h-away { background: var(--accent); }
+
+  /* CORNER STATS */
+  .corner-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .corner-stat {
+    background: var(--card2);
+    border-radius: 7px;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .cs-value { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--green); }
+  .cs-label { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Goal<span>Mind</span></div>
+  <ul class="nav-links">
+    <li><a href="#" class="active" data-i18n="navHome">Начало</a></li>
+    <li><a href="#" data-i18n="navPredictions">Прогнози</a></li>
+    <li><a href="#" data-i18n="navLive">На живо</a></li>
+    <li><a href="#" data-i18n="navStats">Статистики</a></li>
+    <li><a href="#" data-i18n="navTools">Инструменти</a></li>
+    <li><a href="#" data-i18n="navCommunity">Общност</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="lang-switcher">
+      <button class="lang-toggle" id="langToggle" title="Език / Language">
+        <span class="lang-toggle-flag" id="langToggleFlag">🇧🇬</span>
+        <span class="lang-toggle-arrow">▾</span>
+      </button>
+      <div class="lang-dropdown" id="langDropdown">
+        <button class="lang-btn active" data-lang="bg"><span class="lf">🇧🇬</span> Български</button>
+        <button class="lang-btn" data-lang="en"><span class="lf">🇬🇧</span> English</button>
+        <button class="lang-btn" data-lang="no"><span class="lf">🇳🇴</span> Norsk</button>
+        <button class="lang-btn" data-lang="es"><span class="lf">🇪🇸</span> Español</button>
+        <button class="lang-btn" data-lang="ru"><span class="lf">🇷🇺</span> Русский</button>
+        <button class="lang-btn" data-lang="fr"><span class="lf">🇫🇷</span> Français</button>
+        <button class="lang-btn" data-lang="de"><span class="lf">🇩🇪</span> Deutsch</button>
+        <button class="lang-btn" data-lang="it"><span class="lf">🇮🇹</span> Italiano</button>
+        <button class="lang-btn" data-lang="pt"><span class="lf">🇵🇹</span> Português</button>
+        <button class="lang-btn" data-lang="ro"><span class="lf">🇷🇴</span> Română</button>
+        <button class="lang-btn" data-lang="sr"><span class="lf">🇷🇸</span> Српски</button>
+        <button class="lang-btn" data-lang="el"><span class="lf">🇬🇷</span> Ελληνικά</button>
+        <button class="lang-btn" data-lang="tr"><span class="lf">🇹🇷</span> Türkçe</button>
+        <button class="lang-btn" data-lang="uk"><span class="lf">🇺🇦</span> Українська</button>
+        <button class="lang-btn" data-lang="ar"><span class="lf">🇸🇦</span> العربية</button>
+        <button class="lang-btn" data-lang="zh"><span class="lf">🇨🇳</span> 中文</button>
+        <button class="lang-btn" data-lang="ko"><span class="lf">🇰🇷</span> 한국어</button>
+      </div>
+    </div>
+    <button class="btn-login" id="loginBtn" data-i18n="login">Вход</button>
+    <button class="btn-pro" id="proBtn" data-i18n="proAccess">PRO достъп</button>
+    <div class="user-menu" id="userMenu">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span class="user-name" id="userName"></span>
+      <span class="user-pro-tag" id="userProTag" style="display:none">PRO</span>
+      <button class="user-logout" id="logoutBtn" data-i18n="logout">Изход</button>
+    </div>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-inner">
+    <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">Barcelona 2–1 Real Madrid</span> 67'</div>
+    <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">Man Utd 0–0 Liverpool</span> 34'</div>
+    <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">PSG 3–0 Lyon</span> 78'</div>
+    <div class="ticker-item">⏰ <span data-i18n="tkSoon">СКОРО</span> <span class="ticker-score">Bayern – Dortmund</span> 20:45</div>
+    <div class="ticker-item">⏰ <span data-i18n="tkSoon">СКОРО</span> <span class="ticker-score">Juventus – Milan</span> 21:00</div>
+    <div class="ticker-item">✅ <span data-i18n="tkEnd">КРАЙ</span> <span class="ticker-score">Chelsea 1–2 Arsenal</span></div>
+    <!-- duplicate for seamless loop -->
+    <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">Barcelona 2–1 Real Madrid</span> 67'</div>
+    <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">Man Utd 0–0 Liverpool</span> 34'</div>
+    <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">PSG 3–0 Lyon</span> 78'</div>
+    <div class="ticker-item">⏰ <span data-i18n="tkSoon">СКОРО</span> <span class="ticker-score">Bayern – Dortmund</span> 20:45</div>
+    <div class="ticker-item">⏰ <span data-i18n="tkSoon">СКОРО</span> <span class="ticker-score">Juventus – Milan</span> 21:00</div>
+    <div class="ticker-item">✅ <span data-i18n="tkEnd">КРАЙ</span> <span class="ticker-score">Chelsea 1–2 Arsenal</span></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+  <div class="main-grid">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar-left">
+      <div class="sidebar-section">
+        <div class="sidebar-title" data-i18n="leagues">Лиги</div>
+        <div class="league-item active">
+          <div class="league-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+          <div class="league-name" data-i18n="lgPL">Висша лига</div>
+          <div class="league-count">8</div>
+        </div>
+        <div class="league-item">
+          <div class="league-flag">🇪🇸</div>
+          <div class="league-name" data-i18n="lgLaLiga">Ла Лига</div>
+          <div class="league-count">5</div>
+        </div>
+        <div class="league-item">
+          <div class="league-flag">🇩🇪</div>
+          <div class="league-name" data-i18n="lgBundes">Бундеслига</div>
+          <div class="league-count">6</div>
+        </div>
+        <div class="league-item">
+          <div class="league-flag">🇮🇹</div>
+          <div class="league-name" data-i18n="lgSerieA">Серия А</div>
+          <div class="league-count">4</div>
+        </div>
+        <div class="league-item">
+          <div class="league-flag">🇫🇷</div>
+          <div class="league-name" data-i18n="lgLigue1">Лига 1</div>
+          <div class="league-count">3</div>
+        </div>
+        <div class="league-item">
+          <div class="league-flag">🇳🇱</div>
+          <div class="league-name" data-i18n="lgErediv">Ередивизи</div>
+          <div class="league-count">4</div>
+        </div>
+        <div class="league-item">
+          <div class="league-flag">🇧🇬</div>
+          <div class="league-name" data-i18n="lgParva">Първа лига</div>
+          <div class="league-count">2</div>
+        </div>
+        <div class="league-item">
+          <div class="league-flag">🌍</div>
+          <div class="league-name" data-i18n="lgUCL">Шампионска лига</div>
+          <div class="league-count">3</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title" data-i18n="myPredictions">Моите прогнози</div>
+        <div style="padding:14px 16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:12px;color:var(--muted);" data-i18n="correctThisWeek">Точни тази седмица</span>
+            <span style="font-size:13px;font-weight:700;color:var(--green);">7/9</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:12px;color:var(--muted);" data-i18n="totalAccuracy">Точност общо</span>
+            <span style="font-size:13px;font-weight:700;">68.4%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:12px;color:var(--muted);" data-i18n="streak">Серия</span>
+            <span style="font-size:13px;font-weight:700;color:var(--gold);">🔥 <span data-i18n="streakVal">5 поредни</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center-content">
+
+      <!-- TOOLS BAR -->
+      <div class="tools-bar">
+        <div class="tools-bar-title" data-i18n="tools">Инструменти</div>
+        <div class="tools-list">
+          <div class="tool-card" data-tool="ai">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="2"/><path d="M12 7V4M9 3h6"/><circle cx="9" cy="13" r="1.2" fill="currentColor"/><circle cx="15" cy="13" r="1.2" fill="currentColor"/><path d="M2 12v3M22 12v3"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolAI">AI Прогноза</div>
+          </div>
+          <div class="tool-card" data-tool="stats">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="7" rx="0.6" fill="currentColor" stroke="none"/><rect x="10.25" y="6" width="3.5" height="12" rx="0.6" fill="currentColor" stroke="none"/><rect x="15.5" y="14" width="3.5" height="4" rx="0.6" fill="currentColor" stroke="none"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolStats">Статистики</div>
+          </div>
+          <div class="tool-card" data-tool="h2h">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5l6 6-9 9-6-6z" opacity="0.4"/><path d="M3 21l4-1 13-13a2 2 0 0 0-3-3L4 17z"/><path d="M14 6l4 4"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolH2H">Директни срещи</div>
+          </div>
+          <div class="tool-card" data-tool="odds">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-8"/><path d="M16 4h5v5"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolOdds">Движение на коефициенти</div>
+          </div>
+          <div class="tool-card" data-tool="goals">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7l2.5 1.8-1 3h-3l-1-3z" fill="currentColor" stroke="none"/><path d="M12 7V3.5M14.5 8.8l3-1.2M13.5 11.8l1.2 3.3M10.5 11.8l-1.2 3.3M9.5 8.8l-3-1.2"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolGoals">Голова статистика</div>
+          </div>
+          <div class="tool-card" data-tool="corners">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2.5 3.5L16 11H5" fill="currentColor" stroke="none" opacity="0.85"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolCorners">Корнери & карти</div>
+          </div>
+          <div class="tool-card" data-tool="injuries">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M12 10v6M9 13h6"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolInjuries">Контузии & наредба</div>
+          </div>
+          <div class="tool-card" data-tool="calc">
+            <div class="tool-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><rect x="8" y="5" width="8" height="3" rx="0.5" fill="currentColor" stroke="none"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg></div>
+            <div class="tool-card-name" data-i18n="toolCalc">Калкулатор печалба</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab active" data-tab="live" data-i18n="tabLive">На живо (3)</button>
+        <button class="tab" data-tab="today" data-i18n="tabToday">Днес (14)</button>
+        <button class="tab" data-tab="tomorrow" data-i18n="tabTomorrow">Утре (22)</button>
+        <button class="tab" data-tab="top" data-i18n="tabTop">Топ избори</button>
+        <button class="tab" data-tab="safe" data-i18n="tabSafe">Сигурни</button>
+      </div>
+
+      <!-- LIVE MATCHES -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">
+            <div class="live-dot"></div>
+            <span data-i18n="liveMatches">Срещи на живо</span>
+          </div>
+          <div class="see-all" data-i18n="seeAll">Виж всички →</div>
+        </div>
+
+        <!-- Тук се зареждат РЕАЛНИТЕ мачове от сървъра -->
+        <div id="liveMatchesContainer"></div>
+        <div id="liveLoading" class="live-loading" style="display:none;" data-i18n="loading">Зареждане на мачове на живо…</div>
+        <div id="liveError" class="live-error" style="display:none;"></div>
+
+        <!-- ДЕМО мачове (показват се само ако няма реални данни) -->
+        <div id="demoMatches">
+
+        <!-- MATCH 1 -->
+        <div class="match-card live">
+          <div class="match-meta">
+            <div class="match-league">
+              🇪🇸 <span data-i18n="lgLaLiga">Ла Лига</span>
+              <span class="live-badge" data-i18n="liveBadge">НА ЖИВО</span>
+            </div>
+            <div class="match-time live">67'</div>
+          </div>
+
+          <div class="match-teams">
+            <div class="team">
+              <div class="team-logo">🔵🔴</div>
+              <div>
+                <div class="team-name">Barcelona</div>
+                <div class="form-dots">
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot d">Р</div>
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot l">З</div>
+                </div>
+              </div>
+            </div>
+            <div class="score-box">
+              <div class="score live">2–1</div>
+              <div class="score-min">⚽ 67'</div>
+            </div>
+            <div class="team away">
+              <div class="team-logo">⚪🟣</div>
+              <div>
+                <div class="team-name">Real Madrid</div>
+                <div class="form-dots" style="justify-content:flex-end">
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot d">Р</div>
+                  <div class="form-dot w">В</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prediction-section">
+            <div class="pred-header">
+              <div class="pred-title" data-i18n="aiPrediction">AI Прогноза</div>
+              <div class="pred-conf"><span data-i18n="accuracy">Точност</span>: 84%</div>
+            </div>
+            <div class="odds-row">
+              <div class="odd-btn" data-match="Barcelona – Real Madrid" data-pick="1 Barcelona" data-odd="1.85">
+                <div class="odd-label">1 <span data-i18n="tmBarca">Барса</span></div>
+                <div class="odd-value">1.85</div>
+              </div>
+              <div class="odd-btn" data-match="Barcelona – Real Madrid" data-pick="X" data-odd="3.40">
+                <div class="odd-label"><span data-i18n="oddDraw">Равен</span></div>
+                <div class="odd-value">3.40</div>
+              </div>
+              <div class="odd-btn" data-match="Barcelona – Real Madrid" data-pick="2 Real Madrid" data-odd="4.20">
+                <div class="odd-label">2 <span data-i18n="tmReal">Реал</span></div>
+                <div class="odd-value">4.20</div>
+              </div>
+            </div>
+            <div class="prob-bar">
+              <div class="prob-h" style="width:58%"></div>
+              <div class="prob-d" style="width:22%"></div>
+              <div class="prob-a" style="width:20%"></div>
+            </div>
+            <div class="prob-labels">
+              <div class="prob-label"><span>58%</span> <span data-i18n="tmBarca">Барса</span></div>
+              <div class="prob-label"><span>22%</span> <span data-i18n="oddDraw">Равен</span></div>
+              <div class="prob-label"><span>20%</span> <span data-i18n="tmReal">Реал</span></div>
+            </div>
+            <div class="ai-insight">
+              <div class="ai-icon">AI</div>
+              <div class="ai-text" data-i18n-html="aiText1"><strong>Барселона</strong> води и е в добра форма у дома. Реал изпуска голове в 2-то полувреме. Препоръка: <strong>Барса или над 2.5 гола</strong>.</div>
+            </div>
+          </div>
+
+          <div class="h2h-bar">
+            <div class="h2h-title" data-i18n="h2hLast10">Директни срещи (последни 10)</div>
+            <div class="h2h-row">
+              <div class="h2h-team"><span data-i18n="tmBarca">Барса</span> 4</div>
+              <div class="h2h-track">
+                <div class="h2h-home" style="width:40%"></div>
+                <div class="h2h-draw" style="width:30%"></div>
+                <div class="h2h-away" style="width:30%"></div>
+              </div>
+              <div class="h2h-team right">3 <span data-i18n="tmReal">Реал</span></div>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-pill"><span data-i18n="stPossession">Притежание</span> <span>64%–36%</span></div>
+            <div class="stat-pill"><span data-i18n="stShots">Удари</span> <span>14–7</span></div>
+            <div class="stat-pill"><span data-i18n="stOnTarget">На рамката</span> <span>5–2</span></div>
+            <div class="stat-pill"><span data-i18n="stCorners">Корнери</span> <span>6–3</span></div>
+          </div>
+        </div>
+
+        <!-- MATCH 2 -->
+        <div class="match-card live">
+          <div class="match-meta">
+            <div class="match-league">
+              🏴󠁧󠁢󠁥󠁮󠁧󠁿 <span data-i18n="lgPL">Висша лига</span>
+              <span class="live-badge" data-i18n="liveBadge">НА ЖИВО</span>
+            </div>
+            <div class="match-time live">34'</div>
+          </div>
+
+          <div class="match-teams">
+            <div class="team">
+              <div class="team-logo">🔴⚪</div>
+              <div>
+                <div class="team-name">Man Utd</div>
+                <div class="form-dots">
+                  <div class="form-dot l">З</div>
+                  <div class="form-dot d">Р</div>
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot l">З</div>
+                  <div class="form-dot d">Р</div>
+                </div>
+              </div>
+            </div>
+            <div class="score-box">
+              <div class="score live">0–0</div>
+              <div class="score-min">34'</div>
+            </div>
+            <div class="team away">
+              <div class="team-logo">🔴⚽</div>
+              <div>
+                <div class="team-name">Liverpool</div>
+                <div class="form-dots" style="justify-content:flex-end">
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot d">Р</div>
+                  <div class="form-dot w">В</div>
+                  <div class="form-dot w">В</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prediction-section">
+            <div class="pred-header">
+              <div class="pred-title" data-i18n="aiPrediction">AI Прогноза</div>
+              <div class="pred-conf"><span data-i18n="accuracy">Точност</span>: 71%</div>
+            </div>
+            <div class="odds-row">
+              <div class="odd-btn" data-match="Man Utd – Liverpool" data-pick="1 Man Utd" data-odd="3.60">
+                <div class="odd-label">1 <span data-i18n="tmMU">МЮ</span></div>
+                <div class="odd-value">3.60</div>
+              </div>
+              <div class="odd-btn" data-match="Man Utd – Liverpool" data-pick="X" data-odd="3.20">
+                <div class="odd-label"><span data-i18n="oddDraw">Равен</span></div>
+                <div class="odd-value">3.20</div>
+              </div>
+              <div class="odd-btn" data-match="Man Utd – Liverpool" data-pick="2 Liverpool" data-odd="2.10">
+                <div class="odd-label">2 <span data-i18n="tmLiv">Лив</span></div>
+                <div class="odd-value">2.10</div>
+              </div>
+            </div>
+            <div class="prob-bar">
+              <div class="prob-h" style="width:22%"></div>
+              <div class="prob-d" style="width:28%"></div>
+              <div class="prob-a" style="width:50%"></div>
+            </div>
+            <div class="prob-labels">
+              <div class="prob-label"><span>22%</span> <span data-i18n="tmMU">МЮ</span></div>
+              <div class="prob-label"><span>28%</span> <span data-i18n="oddDraw">Равен</span></div>
+              <div class="prob-label"><span>50%</span> <span data-i18n="tmLiv">Лив</span></div>
+            </div>
+
+            <div class="corner-stats">
+              <div class="corner-stat">
+                <div class="cs-value">2.3</div>
+                <div class="cs-label"><span data-i18n="stAvgGoalsMU">Ср. гола МЮ</span></div>
+              </div>
+              <div class="corner-stat">
+                <div class="cs-value">3.1</div>
+                <div class="cs-label"><span data-i18n="stAvgGoalsLiv">Ср. гола Лив</span></div>
+              </div>
+              <div class="corner-stat">
+                <div class="cs-value">78%</div>
+                <div class="cs-label">BTTS</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- край demoMatches -->
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="sidebar-right">
+
+      <!-- BETSLIP -->
+      <div class="betslip">
+        <div class="betslip-header">
+          <div class="betslip-title" data-i18n="betslip">Купон</div>
+          <div class="betslip-count" id="betslipCount">0</div>
+        </div>
+        <div id="betslipItems">
+          <!-- Залозите се добавят тук динамично -->
+          <div class="betslip-empty" id="betslipEmpty" data-i18n="emptySlip">Кликни на коефициент, за да добавиш прогноза</div>
+        </div>
+        <div class="betslip-footer">
+          <div class="betslip-total">
+            <span data-i18n="totalOdds">Общ коеф.</span>
+            <strong id="totalOdds">1.00</strong>
+          </div>
+          <div class="stake-input">
+            <input type="number" id="stakeInput" placeholder="Залог (лв.)" value="20" data-i18n-ph="stakePlaceholder" min="0" />
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:13px;">
+            <span style="color:var(--muted)" data-i18n="potentialWin">Потенциална печалба</span>
+            <span style="color:var(--green);font-weight:700;" id="potentialWin">0.00</span>
+          </div>
+          <button class="btn-place" id="saveBtn" data-i18n="saveBetslip">Запази купона</button>
+          <div class="betslip-saved" id="savedMsg" data-i18n="savedMsg">✓ Купонът е запазен!</div>
+        </div>
+      </div>
+
+      <!-- PROMO -->
+      <div class="promo-banner">
+        <div class="promo-tag">⚡ PRO Plan</div>
+        <div class="promo-title" data-i18n="promoTitle">Отключи всички инструменти</div>
+        <div class="promo-sub" data-i18n="promoSub">AI прогнози, живи статистики, неограничени купони и приоритетни сигнали.</div>
+        <button class="btn-upgrade" data-i18n="promoBtn">Стани PRO → 9.99 лв/мес</button>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="leaderboard">
+        <div class="lb-header">🏆 <span data-i18n="topPredictors">Топ предсказатели</span></div>
+        <div class="lb-item">
+          <div class="lb-rank gold">1</div>
+          <div class="lb-avatar">ИД</div>
+          <div>
+            <div class="lb-name">IvanD92</div>
+            <div class="lb-wins">74% <span data-i18n="accuracyShort">точност</span></div>
+          </div>
+          <div class="lb-roi">+234 лв</div>
+        </div>
+        <div class="lb-item">
+          <div class="lb-rank silver">2</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">МА</div>
+          <div>
+            <div class="lb-name">Marinov_A</div>
+            <div class="lb-wins">71% <span data-i18n="accuracyShort">точност</span></div>
+          </div>
+          <div class="lb-roi">+187 лв</div>
+        </div>
+        <div class="lb-item">
+          <div class="lb-rank bronze">3</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#ffd32a,#ff9f43)">СС</div>
+          <div>
+            <div class="lb-name">SportStar</div>
+            <div class="lb-wins">69% <span data-i18n="accuracyShort">точност</span></div>
+          </div>
+          <div class="lb-roi">+156 лв</div>
+        </div>
+        <div class="lb-item">
+          <div class="lb-rank">4</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#00b8ff,#0097e6)">БК</div>
+          <div>
+            <div class="lb-name">Better_K</div>
+            <div class="lb-wins">67% <span data-i18n="accuracyShort">точност</span></div>
+          </div>
+          <div class="lb-roi">+121 лв</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL (Вход / Регистрация) -->
+<div class="modal-overlay" id="authModal">
+  <div class="auth-modal">
+    <div class="auth-header">
+      <div class="auth-title" id="authTitle" data-i18n="login">Вход</div>
+      <button class="auth-close" id="authClose">×</button>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" data-i18n="login">Вход</button>
+      <button class="auth-tab" id="tabRegister" data-i18n="register">Регистрация</button>
+    </div>
+    <div class="auth-body">
+      <div class="auth-msg" id="authMsg"></div>
+      <div class="auth-field" id="fieldUsername" style="display:none">
+        <label data-i18n="usernameLabel">Потребителско име</label>
+        <input type="text" id="authUsername" autocomplete="username" />
+      </div>
+      <div class="auth-field">
+        <label data-i18n="emailLabel">Имейл</label>
+        <input type="email" id="authEmail" autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label data-i18n="passwordLabel">Парола</label>
+        <input type="password" id="authPassword" autocomplete="current-password" />
+      </div>
+      <button class="auth-submit" id="authSubmit" data-i18n="login">Вход</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOOL MODAL (инструменти + калкулатор) -->
+<div class="modal-overlay" id="toolModal">
+  <div class="tool-modal">
+    <div class="tool-modal-header">
+      <div class="tool-modal-icon" id="toolModalIcon"></div>
+      <div class="tool-modal-title" id="toolModalTitle"></div>
+      <button class="auth-close" id="toolModalClose">×</button>
+    </div>
+    <div class="tool-modal-body" id="toolModalBody"></div>
+  </div>
+</div>
+
+<script>
+const translations = {
+  bg: {
+    navHome:"Начало", navPredictions:"Прогнози", navLive:"На живо", navStats:"Статистики", navTools:"Инструменти", navCommunity:"Общност",
+    login:"Вход", proAccess:"PRO достъп",
+    leagues:"Лиги", myPredictions:"Моите прогнози", correctThisWeek:"Точни тази седмица", totalAccuracy:"Точност общо", streak:"Серия", streakVal:"5 поредни",
+    tools:"Инструменти", toolAI:"AI Прогноза", toolStats:"Статистики", toolH2H:"Директни срещи", toolOdds:"Движение на коефициенти", toolGoals:"Голова статистика", toolCorners:"Корнери & карти", toolInjuries:"Контузии & наредба", toolCalc:"Калкулатор печалба",
+    tabLive:"На живо (3)", tabToday:"Днес (14)", tabTomorrow:"Утре (22)", tabTop:"Топ избори", tabSafe:"Сигурни",
+    liveMatches:"Срещи на живо", seeAll:"Виж всички →",
+    aiPrediction:"AI Прогноза", accuracy:"Точност", h2hLast10:"Директни срещи (последни 10)",
+    betslip:"Купон", odds:"Коефициент", over25:"Над 2.5 гола", totalOdds:"Общ коеф.", potentialWin:"Потенциална печалба", saveBetslip:"Запази купона", stakePlaceholder:"Залог (лв.)",
+    promoTitle:"Отключи всички инструменти", promoSub:"AI прогнози, живи статистики, неограничени купони и приоритетни сигнали.", promoBtn:"Стани PRO → 9.99 лв/мес",
+    topPredictors:"Топ предсказатели", accuracyShort:"точност", emptySlip:"Кликни на коефициент, за да добавиш прогноза", savedMsg:"✓ Купонът е запазен!", loading:"Зареждане на мачове…", realData:"на живо", demoData:"демо данни", halftime:"Почивка",
+    tkLive:"НА ЖИВО", tkSoon:"СКОРО", tkEnd:"КРАЙ", liveBadge:"НА ЖИВО",
+    lgPL:"Висша лига", lgLaLiga:"Ла Лига", lgBundes:"Бундеслига", lgSerieA:"Серия А", lgLigue1:"Лига 1", lgErediv:"Ередивизи", lgParva:"Първа лига", lgUCL:"Шампионска лига",
+    oddDraw:"Равен", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Притежание", stShots:"Удари", stOnTarget:"На рамката", stCorners:"Корнери", stAvgGoalsMU:"Ср. гола МЮ", stAvgGoalsLiv:"Ср. гола Лив",
+    aiText1:"<strong>Barcelona</strong> води и е в добра форма у дома. Real изпуска голове в 2-то полувреме. Препоръка: <strong>Barça или над 2.5 гола</strong>.",
+    register:"Регистрация", logout:"Изход", usernameLabel:"Потребителско име", emailLabel:"Имейл", passwordLabel:"Парола", authSuccess:"Успешно!", proSoon:"Плащането ще бъде добавено скоро!", errInvalidEmail:"Невалиден имейл", errWeakPassword:"Паролата трябва да е поне 6 знака", errEmailTaken:"Този имейл вече е регистриран", errInvalidCreds:"Грешен имейл или парола", errServer:"Грешка със сървъра", errFillAll:"Попълнете всички полета",
+    calcDesc:"Изчисли потенциалната печалба от залог.", calcStake:"Залог", calcOdds:"Коефициент", calcReturn:"Обща изплата", calcProfit:"Печалба", toolProNote:"Пълните данни са достъпни с PRO абонамент.", toolDesc_ai:"AI прогнози на база форма, статистики и история на отборите.", toolDesc_stats:"Подробни статистики за всеки отбор и мач.", toolDesc_h2h:"История на директните срещи между два отбора.", toolDesc_odds:"Проследяване как се движат коефициентите във времето.", toolDesc_goals:"Среден брой голове, голове по полувремена и тенденции.", toolDesc_corners:"Статистика за корнери, жълти и червени картони.", toolDesc_injuries:"Контузени играчи и очаквани стартови състави.", toolDesc_calc:"Калкулатор за печалба."
+  },
+  en: {
+    navHome:"Home", navPredictions:"Predictions", navLive:"Live", navStats:"Stats", navTools:"Tools", navCommunity:"Community",
+    login:"Log in", proAccess:"PRO access",
+    leagues:"Leagues", myPredictions:"My predictions", correctThisWeek:"Correct this week", totalAccuracy:"Total accuracy", streak:"Streak", streakVal:"5 in a row",
+    tools:"Tools", toolAI:"AI Prediction", toolStats:"Stats", toolH2H:"Head-to-head", toolOdds:"Odds movement", toolGoals:"Goal stats", toolCorners:"Corners & cards", toolInjuries:"Injuries & lineup", toolCalc:"Profit calculator",
+    tabLive:"Live (3)", tabToday:"Today (14)", tabTomorrow:"Tomorrow (22)", tabTop:"Top picks", tabSafe:"Safe",
+    liveMatches:"Live matches", seeAll:"See all \u2192",
+    aiPrediction:"AI Prediction", accuracy:"Accuracy", h2hLast10:"Head-to-head (last 10)",
+    betslip:"Bet slip", odds:"Odds", over25:"Over 2.5 goals", totalOdds:"Total odds", potentialWin:"Potential win", saveBetslip:"Save bet slip", stakePlaceholder:"Stake",
+    promoTitle:"Unlock all tools", promoSub:"AI predictions, live stats, unlimited bet slips and priority signals.", promoBtn:"Go PRO \u2192 \u20ac9.99/mo",
+    topPredictors:"Top predictors", accuracyShort:"accuracy", emptySlip:"Click an odd to add a prediction", savedMsg:"✓ Bet slip saved!", loading:"Loading matches…", realData:"live", demoData:"demo data", halftime:"HT",
+    tkLive:"LIVE", tkSoon:"SOON", tkEnd:"ENDED", liveBadge:"LIVE",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Bulgarian League", lgUCL:"Champions League",
+    oddDraw:"Draw", tmBarca:"Bar\u00e7a", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Possession", stShots:"Shots", stOnTarget:"On target", stCorners:"Corners", stAvgGoalsMU:"Avg goals Man Utd", stAvgGoalsLiv:"Avg goals Liv",
+    aiText1:"<strong>Barcelona</strong> are ahead and in good home form. Real concede goals in the second half. Recommendation: <strong>Barça or over 2.5 goals</strong>.",
+    register:"Sign up", logout:"Log out", usernameLabel:"Username", emailLabel:"Email", passwordLabel:"Password", authSuccess:"Success!", proSoon:"Payments coming soon!", errInvalidEmail:"Invalid email", errWeakPassword:"Password must be at least 6 characters", errEmailTaken:"This email is already registered", errInvalidCreds:"Wrong email or password", errServer:"Server error", errFillAll:"Please fill all fields",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  no: {
+    navHome:"Hjem", navPredictions:"Tips", navLive:"Direkte", navStats:"Statistikk", navTools:"Verktøy", navCommunity:"Fellesskap",
+    login:"Logg inn", proAccess:"PRO-tilgang",
+    leagues:"Ligaer", myPredictions:"Mine tips", correctThisWeek:"Riktige denne uken", totalAccuracy:"Total nøyaktighet", streak:"Rekke", streakVal:"5 på rad",
+    tools:"Verktøy", toolAI:"AI-tips", toolStats:"Statistikk", toolH2H:"Innbyrdes oppgjør", toolOdds:"Oddsbevegelse", toolGoals:"Målstatistikk", toolCorners:"Hjørner & kort", toolInjuries:"Skader & lag", toolCalc:"Gevinstkalkulator",
+    tabLive:"Direkte (3)", tabToday:"I dag (14)", tabTomorrow:"I morgen (22)", tabTop:"Topptips", tabSafe:"Sikre",
+    liveMatches:"Direktekamper", seeAll:"Se alle →",
+    aiPrediction:"AI-tips", accuracy:"Nøyaktighet", h2hLast10:"Innbyrdes oppgjør (siste 10)",
+    betslip:"Kupong", odds:"Odds", over25:"Over 2,5 mål", totalOdds:"Totalodds", potentialWin:"Mulig gevinst", saveBetslip:"Lagre kupong", stakePlaceholder:"Innsats (kr)",
+    promoTitle:"Lås opp alle verktøy", promoSub:"AI-tips, direktestatistikk, ubegrensede kuponger og prioriterte signaler.", promoBtn:"Bli PRO → 99 kr/mnd",
+    topPredictors:"Topptipsere", accuracyShort:"nøyaktighet", emptySlip:"Klikk på en odds for å legge til et tips", savedMsg:"✓ Kupongen er lagret!", loading:"Laster kamper…", realData:"direkte", demoData:"demodata", halftime:"Pause",
+    tkLive:"DIREKTE", tkSoon:"SNART", tkEnd:"SLUTT", liveBadge:"DIREKTE",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Æresdivisjonen", lgParva:"Bulgarsk liga", lgUCL:"Mesterligaen",
+    oddDraw:"Uavgjort", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Ballbesittelse", stShots:"Skudd", stOnTarget:"På mål", stCorners:"Hjørner", stAvgGoalsMU:"Snittmål ManU", stAvgGoalsLiv:"Snittmål Liv",
+    aiText1:"<strong>Barcelona</strong> leder og er i god form hjemme. Real slipper inn mål i andre omgang. Anbefaling: <strong>Barça eller over 2,5 mål</strong>.",
+    register:"Registrer", logout:"Logg ut", usernameLabel:"Brukernavn", emailLabel:"E-post", passwordLabel:"Passord", authSuccess:"Vellykket!", proSoon:"Betaling kommer snart!", errInvalidEmail:"Ugyldig e-post", errWeakPassword:"Passordet må være minst 6 tegn", errEmailTaken:"Denne e-posten er allerede registrert", errInvalidCreds:"Feil e-post eller passord", errServer:"Serverfeil", errFillAll:"Fyll ut alle felt",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  es: {
+    navHome:"Inicio", navPredictions:"Pronósticos", navLive:"En vivo", navStats:"Estadísticas", navTools:"Herramientas", navCommunity:"Comunidad",
+    login:"Entrar", proAccess:"Acceso PRO",
+    leagues:"Ligas", myPredictions:"Mis pronósticos", correctThisWeek:"Aciertos esta semana", totalAccuracy:"Precisión total", streak:"Racha", streakVal:"5 seguidos",
+    tools:"Herramientas", toolAI:"Pronóstico IA", toolStats:"Estadísticas", toolH2H:"Cara a cara", toolOdds:"Movimiento de cuotas", toolGoals:"Estadística de goles", toolCorners:"Córners y tarjetas", toolInjuries:"Lesiones y alineación", toolCalc:"Calculadora de ganancias",
+    tabLive:"En vivo (3)", tabToday:"Hoy (14)", tabTomorrow:"Mañana (22)", tabTop:"Mejores", tabSafe:"Seguros",
+    liveMatches:"Partidos en vivo", seeAll:"Ver todos →",
+    aiPrediction:"Pronóstico IA", accuracy:"Precisión", h2hLast10:"Cara a cara (últimos 10)",
+    betslip:"Boleto", odds:"Cuota", over25:"Más de 2.5 goles", totalOdds:"Cuota total", potentialWin:"Ganancia potencial", saveBetslip:"Guardar boleto", stakePlaceholder:"Apuesta (€)",
+    promoTitle:"Desbloquea todas las herramientas", promoSub:"Pronósticos IA, estadísticas en vivo, boletos ilimitados y señales prioritarias.", promoBtn:"Hazte PRO → 9,99 €/mes",
+    topPredictors:"Mejores pronosticadores", accuracyShort:"precisión", emptySlip:"Haz clic en una cuota para añadir un pronóstico", savedMsg:"✓ ¡Boleto guardado!", loading:"Cargando partidos…", realData:"en vivo", demoData:"datos demo", halftime:"Descanso",
+    tkLive:"EN VIVO", tkSoon:"PRONTO", tkEnd:"FINAL", liveBadge:"EN VIVO",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Liga Búlgara", lgUCL:"Champions League",
+    oddDraw:"Empate", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Posesión", stShots:"Tiros", stOnTarget:"A puerta", stCorners:"Córners", stAvgGoalsMU:"Goles prom. ManU", stAvgGoalsLiv:"Goles prom. Liv",
+    aiText1:"<strong>Barcelona</strong> domina y está en buena forma en casa. El Real encaja goles en la segunda parte. Recomendación: <strong>Barça o más de 2.5 goles</strong>.",
+    register:"Registrarse", logout:"Salir", usernameLabel:"Nombre de usuario", emailLabel:"Correo", passwordLabel:"Contraseña", authSuccess:"¡Éxito!", proSoon:"¡Pagos próximamente!", errInvalidEmail:"Correo inválido", errWeakPassword:"La contraseña debe tener al menos 6 caracteres", errEmailTaken:"Este correo ya está registrado", errInvalidCreds:"Correo o contraseña incorrectos", errServer:"Error del servidor", errFillAll:"Complete todos los campos",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Apuesta", calcOdds:"Cuota", calcReturn:"Retorno total", calcProfit:"Ganancia", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  ru: {
+    navHome:"Главная", navPredictions:"Прогнозы", navLive:"В прямом эфире", navStats:"Статистика", navTools:"Инструменты", navCommunity:"Сообщество",
+    login:"Вход", proAccess:"PRO доступ",
+    leagues:"Лиги", myPredictions:"Мои прогнозы", correctThisWeek:"Верные на этой неделе", totalAccuracy:"Общая точность", streak:"Серия", streakVal:"5 подряд",
+    tools:"Инструменты", toolAI:"ИИ прогноз", toolStats:"Статистика", toolH2H:"Очные встречи", toolOdds:"Движение коэффициентов", toolGoals:"Статистика голов", toolCorners:"Угловые и карточки", toolInjuries:"Травмы и состав", toolCalc:"Калькулятор выигрыша",
+    tabLive:"В эфире (3)", tabToday:"Сегодня (14)", tabTomorrow:"Завтра (22)", tabTop:"Лучшие", tabSafe:"Надёжные",
+    liveMatches:"Матчи в эфире", seeAll:"Все матчи →",
+    aiPrediction:"ИИ прогноз", accuracy:"Точность", h2hLast10:"Очные встречи (последние 10)",
+    betslip:"Купон", odds:"Коэффициент", over25:"Больше 2.5 голов", totalOdds:"Общий коэф.", potentialWin:"Возможный выигрыш", saveBetslip:"Сохранить купон", stakePlaceholder:"Ставка (₽)",
+    promoTitle:"Открой все инструменты", promoSub:"ИИ прогнозы, живая статистика, безлимитные купоны и приоритетные сигналы.", promoBtn:"Стать PRO → 599 ₽/мес",
+    topPredictors:"Лучшие прогнозисты", accuracyShort:"точность", emptySlip:"Нажмите на коэффициент, чтобы добавить прогноз", savedMsg:"✓ Купон сохранён!", loading:"Загрузка матчей…", realData:"в эфире", demoData:"демо данные", halftime:"Перерыв",
+    tkLive:"В ЭФИРЕ", tkSoon:"СКОРО", tkEnd:"ЗАВЕРШЁН", liveBadge:"В ЭФИРЕ",
+    lgPL:"Премьер-лига", lgLaLiga:"Ла Лига", lgBundes:"Бундеслига", lgSerieA:"Серия А", lgLigue1:"Лига 1", lgErediv:"Эредивизи", lgParva:"Болгарская лига", lgUCL:"Лига чемпионов",
+    oddDraw:"Ничья", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Владение", stShots:"Удары", stOnTarget:"В створ", stCorners:"Угловые", stAvgGoalsMU:"Ср. голов МЮ", stAvgGoalsLiv:"Ср. голов Лив",
+    aiText1:"<strong>Barcelona</strong> ведёт и в хорошей форме дома. Real пропускает голы во втором тайме. Рекомендация: <strong>Barça или больше 2.5 голов</strong>.",
+    register:"Регистрация", logout:"Выход", usernameLabel:"Имя пользователя", emailLabel:"Эл. почта", passwordLabel:"Пароль", authSuccess:"Успешно!", proSoon:"Оплата скоро появится!", errInvalidEmail:"Неверная почта", errWeakPassword:"Пароль не менее 6 символов", errEmailTaken:"Эта почта уже зарегистрирована", errInvalidCreds:"Неверная почта или пароль", errServer:"Ошибка сервера", errFillAll:"Заполните все поля",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коэффициент", calcReturn:"Общая выплата", calcProfit:"Прибыль", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  fr: {
+    navHome:"Accueil", navPredictions:"Pronostics", navLive:"En direct", navStats:"Statistiques", navTools:"Outils", navCommunity:"Communauté",
+    login:"Connexion", proAccess:"Accès PRO",
+    leagues:"Ligues", myPredictions:"Mes pronostics", correctThisWeek:"Corrects cette semaine", totalAccuracy:"Précision totale", streak:"Série", streakVal:"5 d'affilée",
+    tools:"Outils", toolAI:"Pronostic IA", toolStats:"Statistiques", toolH2H:"Confrontations", toolOdds:"Évolution des cotes", toolGoals:"Statistiques de buts", toolCorners:"Corners & cartons", toolInjuries:"Blessures & compo", toolCalc:"Calculateur de gains",
+    tabLive:"En direct (3)", tabToday:"Aujourd'hui (14)", tabTomorrow:"Demain (22)", tabTop:"Meilleurs", tabSafe:"Sûrs",
+    liveMatches:"Matchs en direct", seeAll:"Voir tout →",
+    aiPrediction:"Pronostic IA", accuracy:"Précision", h2hLast10:"Confrontations (10 derniers)",
+    betslip:"Coupon", odds:"Cote", over25:"Plus de 2,5 buts", totalOdds:"Cote totale", potentialWin:"Gain potentiel", saveBetslip:"Enregistrer le coupon", stakePlaceholder:"Mise (€)",
+    promoTitle:"Débloquez tous les outils", promoSub:"Pronostics IA, stats en direct, coupons illimités et signaux prioritaires.", promoBtn:"Passez PRO → 9,99 €/mois",
+    topPredictors:"Meilleurs pronostiqueurs", accuracyShort:"précision", emptySlip:"Cliquez sur une cote pour ajouter un pronostic", savedMsg:"✓ Coupon enregistré !", loading:"Chargement des matchs…", realData:"en direct", demoData:"données démo", halftime:"Mi-temps",
+    tkLive:"EN DIRECT", tkSoon:"BIENTÔT", tkEnd:"TERMINÉ", liveBadge:"EN DIRECT",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Ligue bulgare", lgUCL:"Ligue des champions",
+    oddDraw:"Nul", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Possession", stShots:"Tirs", stOnTarget:"Cadrés", stCorners:"Corners", stAvgGoalsMU:"Buts moy. ManU", stAvgGoalsLiv:"Buts moy. Liv",
+    aiText1:"<strong>Barcelone</strong> mène et est en forme à domicile. Le Real encaisse en seconde période. Recommandation : <strong>Barça ou plus de 2,5 buts</strong>.",
+    register:"S'inscrire", logout:"Déconnexion", usernameLabel:"Nom d'utilisateur", emailLabel:"E-mail", passwordLabel:"Mot de passe", authSuccess:"Réussi !", proSoon:"Paiements bientôt disponibles !", errInvalidEmail:"E-mail invalide", errWeakPassword:"Le mot de passe doit comporter au moins 6 caractères", errEmailTaken:"Cet e-mail est déjà enregistré", errInvalidCreds:"E-mail ou mot de passe incorrect", errServer:"Erreur du serveur", errFillAll:"Remplissez tous les champs",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Mise", calcOdds:"Cote", calcReturn:"Retour total", calcProfit:"Gain", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  de: {
+    navHome:"Start", navPredictions:"Tipps", navLive:"Live", navStats:"Statistik", navTools:"Tools", navCommunity:"Community",
+    login:"Anmelden", proAccess:"PRO-Zugang",
+    leagues:"Ligen", myPredictions:"Meine Tipps", correctThisWeek:"Richtig diese Woche", totalAccuracy:"Gesamtgenauigkeit", streak:"Serie", streakVal:"5 in Folge",
+    tools:"Tools", toolAI:"KI-Tipp", toolStats:"Statistik", toolH2H:"Direkte Duelle", toolOdds:"Quotenverlauf", toolGoals:"Torstatistik", toolCorners:"Ecken & Karten", toolInjuries:"Verletzungen & Aufstellung", toolCalc:"Gewinnrechner",
+    tabLive:"Live (3)", tabToday:"Heute (14)", tabTomorrow:"Morgen (22)", tabTop:"Top-Tipps", tabSafe:"Sicher",
+    liveMatches:"Live-Spiele", seeAll:"Alle ansehen →",
+    aiPrediction:"KI-Tipp", accuracy:"Genauigkeit", h2hLast10:"Direkte Duelle (letzte 10)",
+    betslip:"Wettschein", odds:"Quote", over25:"Über 2,5 Tore", totalOdds:"Gesamtquote", potentialWin:"Möglicher Gewinn", saveBetslip:"Wettschein speichern", stakePlaceholder:"Einsatz (€)",
+    promoTitle:"Alle Tools freischalten", promoSub:"KI-Tipps, Live-Statistiken, unbegrenzte Wettscheine und Prioritätssignale.", promoBtn:"PRO werden → 9,99 €/Mon",
+    topPredictors:"Top-Tipper", accuracyShort:"Genauigkeit", emptySlip:"Klicke auf eine Quote, um einen Tipp hinzuzufügen", savedMsg:"✓ Wettschein gespeichert!", loading:"Spiele werden geladen…", realData:"live", demoData:"Demo-Daten", halftime:"Halbzeit",
+    tkLive:"LIVE", tkSoon:"BALD", tkEnd:"ENDE", liveBadge:"LIVE",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Bulgarische Liga", lgUCL:"Champions League",
+    oddDraw:"Unent.", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Ballbesitz", stShots:"Schüsse", stOnTarget:"Aufs Tor", stCorners:"Ecken", stAvgGoalsMU:"Ø Tore ManU", stAvgGoalsLiv:"Ø Tore Liv",
+    aiText1:"<strong>Barcelona</strong> führt und ist zu Hause in guter Form. Real kassiert Tore in der zweiten Halbzeit. Empfehlung: <strong>Barça oder über 2,5 Tore</strong>.",
+    register:"Registrieren", logout:"Abmelden", usernameLabel:"Benutzername", emailLabel:"E-Mail", passwordLabel:"Passwort", authSuccess:"Erfolgreich!", proSoon:"Zahlungen bald verfügbar!", errInvalidEmail:"Ungültige E-Mail", errWeakPassword:"Passwort muss mindestens 6 Zeichen haben", errEmailTaken:"Diese E-Mail ist bereits registriert", errInvalidCreds:"Falsche E-Mail oder Passwort", errServer:"Serverfehler", errFillAll:"Bitte alle Felder ausfüllen",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Einsatz", calcOdds:"Quote", calcReturn:"Gesamtauszahlung", calcProfit:"Gewinn", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  ar: {
+    navHome:"الرئيسية", navPredictions:"التوقعات", navLive:"مباشر", navStats:"إحصائيات", navTools:"أدوات", navCommunity:"المجتمع",
+    login:"تسجيل الدخول", proAccess:"وصول PRO",
+    leagues:"الدوريات", myPredictions:"توقعاتي", correctThisWeek:"الصحيحة هذا الأسبوع", totalAccuracy:"الدقة الإجمالية", streak:"سلسلة", streakVal:"5 متتالية",
+    tools:"أدوات", toolAI:"توقع الذكاء الاصطناعي", toolStats:"إحصائيات", toolH2H:"مواجهات مباشرة", toolOdds:"حركة الاحتمالات", toolGoals:"إحصائيات الأهداف", toolCorners:"الركنيات والبطاقات", toolInjuries:"الإصابات والتشكيلة", toolCalc:"حاسبة الأرباح",
+    tabLive:"مباشر (3)", tabToday:"اليوم (14)", tabTomorrow:"غداً (22)", tabTop:"أفضل الاختيارات", tabSafe:"الآمنة",
+    liveMatches:"المباريات المباشرة", seeAll:"عرض الكل \u2190",
+    aiPrediction:"توقع الذكاء الاصطناعي", accuracy:"الدقة", h2hLast10:"المواجهات المباشرة (آخر 10)",
+    betslip:"قسيمة الرهان", odds:"الاحتمال", over25:"أكثر من 2.5 هدف", totalOdds:"إجمالي الاحتمالات", potentialWin:"الربح المحتمل", saveBetslip:"حفظ القسيمة", stakePlaceholder:"الرهان",
+    promoTitle:"افتح جميع الأدوات", promoSub:"توقعات الذكاء الاصطناعي، إحصائيات مباشرة، قسائم غير محدودة وإشارات ذات أولوية.", promoBtn:"اشترك PRO \u2190 9.99\u20ac/شهر",
+    topPredictors:"أفضل المتوقعين", accuracyShort:"الدقة", emptySlip:"انقر على احتمال لإضافة توقع", savedMsg:"\u2713 تم حفظ القسيمة!", loading:"جارٍ تحميل المباريات…", realData:"مباشر", demoData:"بيانات تجريبية", halftime:"الاستراحة",
+    tkLive:"مباشر", tkSoon:"قريباً", tkEnd:"انتهت", liveBadge:"مباشر",
+    lgPL:"الدوري الإنجليزي", lgLaLiga:"الليجا", lgBundes:"البوندسليجا", lgSerieA:"الدوري الإيطالي", lgLigue1:"الدوري الفرنسي", lgErediv:"الدوري الهولندي", lgParva:"الدوري البلغاري", lgUCL:"دوري الأبطال",
+    oddDraw:"تعادل", tmBarca:"برشلونة", tmReal:"ريال", tmMU:"مان يونايتد", tmLiv:"ليفربول", tmBarcaFull:"برشلونة",
+    stPossession:"الاستحواذ", stShots:"التسديدات", stOnTarget:"على المرمى", stCorners:"الركنيات", stAvgGoalsMU:"معدل أهداف مان يونايتد", stAvgGoalsLiv:"معدل أهداف ليفربول",
+    aiText1:"<strong>برشلونة</strong> متقدم وفي حالة جيدة في الديار. ريال يستقبل أهدافاً في الشوط الثاني. التوصية: <strong>برشلونة أو أكثر من 2.5 هدف</strong>.",
+    register:"تسجيل", logout:"خروج", usernameLabel:"اسم المستخدم", emailLabel:"البريد الإلكتروني", passwordLabel:"كلمة المرور", authSuccess:"تم بنجاح!", proSoon:"الدفع قريباً!", errInvalidEmail:"بريد غير صالح", errWeakPassword:"يجب أن تكون كلمة المرور 6 أحرف على الأقل", errEmailTaken:"هذا البريد مسجل بالفعل", errInvalidCreds:"بريد أو كلمة مرور خاطئة", errServer:"خطأ في الخادم", errFillAll:"يرجى ملء جميع الحقول",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  zh: {
+    navHome:"首页", navPredictions:"预测", navLive:"直播", navStats:"统计", navTools:"工具", navCommunity:"社区",
+    login:"登录", proAccess:"PRO 访问",
+    leagues:"联赛", myPredictions:"我的预测", correctThisWeek:"本周正确", totalAccuracy:"总准确率", streak:"连胜", streakVal:"连续5次",
+    tools:"工具", toolAI:"AI 预测", toolStats:"统计", toolH2H:"交锋记录", toolOdds:"赔率变化", toolGoals:"进球统计", toolCorners:"角球和牌", toolInjuries:"伤病和阵容", toolCalc:"盈利计算器",
+    tabLive:"直播 (3)", tabToday:"今天 (14)", tabTomorrow:"明天 (22)", tabTop:"热门精选", tabSafe:"稳妥",
+    liveMatches:"直播比赛", seeAll:"查看全部 \u2192",
+    aiPrediction:"AI 预测", accuracy:"准确率", h2hLast10:"交锋记录（最近10场）",
+    betslip:"投注单", odds:"赔率", over25:"大于2.5球", totalOdds:"总赔率", potentialWin:"潜在收益", saveBetslip:"保存投注单", stakePlaceholder:"投注额",
+    promoTitle:"解锁所有工具", promoSub:"AI预测、实时统计、无限投注单和优先信号。", promoBtn:"成为 PRO \u2192 9.99\u20ac/月",
+    topPredictors:"顶级预测者", accuracyShort:"准确率", emptySlip:"点击赔率添加预测", savedMsg:"\u2713 投注单已保存！", loading:"正在加载比赛…", realData:"直播", demoData:"演示数据", halftime:"中场",
+    tkLive:"直播", tkSoon:"即将", tkEnd:"已结束", liveBadge:"直播",
+    lgPL:"英超", lgLaLiga:"西甲", lgBundes:"德甲", lgSerieA:"意甲", lgLigue1:"法甲", lgErediv:"荷甲", lgParva:"保加利亚联赛", lgUCL:"欧冠",
+    oddDraw:"平局", tmBarca:"巴萨", tmReal:"皇马", tmMU:"曼联", tmLiv:"利物浦", tmBarcaFull:"巴塞罗那",
+    stPossession:"控球率", stShots:"射门", stOnTarget:"射正", stCorners:"角球", stAvgGoalsMU:"曼联场均进球", stAvgGoalsLiv:"利物浦场均进球",
+    aiText1:"<strong>巴塞罗那</strong>领先且主场状态良好。皇马在下半场容易失球。建议：<strong>巴萨或大于2.5球</strong>。",
+    register:"注册", logout:"退出", usernameLabel:"用户名", emailLabel:"邮箱", passwordLabel:"密码", authSuccess:"成功！", proSoon:"支付功能即将推出！", errInvalidEmail:"邮箱无效", errWeakPassword:"密码至少6个字符", errEmailTaken:"该邮箱已注册", errInvalidCreds:"邮箱或密码错误", errServer:"服务器错误", errFillAll:"请填写所有字段",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  ko: {
+    navHome:"홈", navPredictions:"예측", navLive:"라이브", navStats:"통계", navTools:"도구", navCommunity:"커뮤니티",
+    login:"로그인", proAccess:"PRO 이용",
+    leagues:"리그", myPredictions:"내 예측", correctThisWeek:"이번 주 적중", totalAccuracy:"전체 정확도", streak:"연승", streakVal:"5연속",
+    tools:"도구", toolAI:"AI 예측", toolStats:"통계", toolH2H:"상대 전적", toolOdds:"배당 변동", toolGoals:"득점 통계", toolCorners:"코너킥 & 카드", toolInjuries:"부상 & 라인업", toolCalc:"수익 계산기",
+    tabLive:"라이브 (3)", tabToday:"오늘 (14)", tabTomorrow:"내일 (22)", tabTop:"인기 추천", tabSafe:"안전",
+    liveMatches:"라이브 경기", seeAll:"전체 보기 \u2192",
+    aiPrediction:"AI 예측", accuracy:"정확도", h2hLast10:"상대 전적 (최근 10경기)",
+    betslip:"베팅 슬립", odds:"배당", over25:"2.5골 오버", totalOdds:"총 배당", potentialWin:"예상 수익", saveBetslip:"베팅 슬립 저장", stakePlaceholder:"베팅액",
+    promoTitle:"모든 도구 잠금 해제", promoSub:"AI 예측, 실시간 통계, 무제한 베팅 슬립 및 우선 신호.", promoBtn:"PRO 가입 \u2192 9.99\u20ac/월",
+    topPredictors:"최고 예측가", accuracyShort:"정확도", emptySlip:"배당을 클릭하여 예측 추가", savedMsg:"\u2713 베팅 슬립이 저장되었습니다!", loading:"경기 불러오는 중…", realData:"라이브", demoData:"데모 데이터", halftime:"하프타임",
+    tkLive:"라이브", tkSoon:"곧", tkEnd:"종료", liveBadge:"라이브",
+    lgPL:"프리미어리그", lgLaLiga:"라리가", lgBundes:"분데스리가", lgSerieA:"세리에 A", lgLigue1:"리그 1", lgErediv:"에레디비시", lgParva:"불가리아 리그", lgUCL:"챔피언스리그",
+    oddDraw:"무승부", tmBarca:"바르사", tmReal:"레알", tmMU:"맨유", tmLiv:"리버풀", tmBarcaFull:"바르셀로나",
+    stPossession:"점유율", stShots:"슈팅", stOnTarget:"유효슈팅", stCorners:"코너킥", stAvgGoalsMU:"맨유 평균 득점", stAvgGoalsLiv:"리버풀 평균 득점",
+    aiText1:"<strong>바르셀로나</strong>가 앞서고 있으며 홈에서 좋은 폼을 보이고 있습니다. 레알은 후반전에 실점하는 경향이 있습니다. 추천: <strong>바르사 또는 2.5골 오버</strong>.",
+    register:"회원가입", logout:"로그아웃", usernameLabel:"사용자 이름", emailLabel:"이메일", passwordLabel:"비밀번호", authSuccess:"성공!", proSoon:"결제 기능 곧 출시!", errInvalidEmail:"잘못된 이메일", errWeakPassword:"비밀번호는 6자 이상이어야 합니다", errEmailTaken:"이미 등록된 이메일입니다", errInvalidCreds:"이메일 또는 비밀번호 오류", errServer:"서버 오류", errFillAll:"모든 항목을 입력하세요",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  pt: {
+    navHome:"Início", navPredictions:"Previsões", navLive:"Ao vivo", navStats:"Estatísticas", navTools:"Ferramentas", navCommunity:"Comunidade",
+    login:"Entrar", proAccess:"Acesso PRO",
+    leagues:"Ligas", myPredictions:"As minhas previsões", correctThisWeek:"Corretas esta semana", totalAccuracy:"Precisão total", streak:"Sequência", streakVal:"5 seguidas",
+    tools:"Ferramentas", toolAI:"Previsão IA", toolStats:"Estatísticas", toolH2H:"Confrontos diretos", toolOdds:"Movimento de odds", toolGoals:"Estatísticas de golos", toolCorners:"Cantos & cartões", toolInjuries:"Lesões & escalação", toolCalc:"Calculadora de lucros",
+    tabLive:"Ao vivo (3)", tabToday:"Hoje (14)", tabTomorrow:"Amanhã (22)", tabTop:"Melhores", tabSafe:"Seguras",
+    liveMatches:"Jogos ao vivo", seeAll:"Ver todos \u2192",
+    aiPrediction:"Previsão IA", accuracy:"Precisão", h2hLast10:"Confrontos diretos (últimos 10)",
+    betslip:"Boletim", odds:"Odd", over25:"Mais de 2.5 golos", totalOdds:"Odd total", potentialWin:"Ganho potencial", saveBetslip:"Guardar boletim", stakePlaceholder:"Aposta",
+    promoTitle:"Desbloqueia todas as ferramentas", promoSub:"Previsões IA, estatísticas ao vivo, boletins ilimitados e sinais prioritários.", promoBtn:"Torna-te PRO \u2192 9,99\u20ac/mês",
+    topPredictors:"Melhores prognosticadores", accuracyShort:"precisão", emptySlip:"Clica numa odd para adicionar uma previsão", savedMsg:"\u2713 Boletim guardado!", loading:"A carregar jogos…", realData:"ao vivo", demoData:"dados demo", halftime:"Intervalo",
+    tkLive:"AO VIVO", tkSoon:"EM BREVE", tkEnd:"FIM", liveBadge:"AO VIVO",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Liga Búlgara", lgUCL:"Liga dos Campeões",
+    oddDraw:"Empate", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Posse", stShots:"Remates", stOnTarget:"À baliza", stCorners:"Cantos", stAvgGoalsMU:"Golos méd. Man Utd", stAvgGoalsLiv:"Golos méd. Liv",
+    aiText1:"<strong>Barcelona</strong> está na frente e em boa forma em casa. O Real sofre golos na segunda parte. Recomendação: <strong>Barça ou mais de 2.5 golos</strong>.",
+    register:"Registar", logout:"Sair", usernameLabel:"Nome de utilizador", emailLabel:"Email", passwordLabel:"Palavra-passe", authSuccess:"Sucesso!", proSoon:"Pagamentos em breve!", errInvalidEmail:"Email inválido", errWeakPassword:"A palavra-passe deve ter pelo menos 6 caracteres", errEmailTaken:"Este email já está registado", errInvalidCreds:"Email ou palavra-passe errados", errServer:"Erro do servidor", errFillAll:"Preencha todos os campos",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Aposta", calcOdds:"Odd", calcReturn:"Retorno total", calcProfit:"Lucro", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  ro: {
+    navHome:"Acasă", navPredictions:"Predicții", navLive:"Live", navStats:"Statistici", navTools:"Instrumente", navCommunity:"Comunitate",
+    login:"Autentificare", proAccess:"Acces PRO",
+    leagues:"Ligi", myPredictions:"Predicțiile mele", correctThisWeek:"Corecte săptămâna asta", totalAccuracy:"Acuratețe totală", streak:"Serie", streakVal:"5 la rând",
+    tools:"Instrumente", toolAI:"Predicție AI", toolStats:"Statistici", toolH2H:"Întâlniri directe", toolOdds:"Mișcarea cotelor", toolGoals:"Statistici goluri", toolCorners:"Cornere & cartonașe", toolInjuries:"Accidentări & echipă", toolCalc:"Calculator câștig",
+    tabLive:"Live (3)", tabToday:"Azi (14)", tabTomorrow:"Mâine (22)", tabTop:"Top alegeri", tabSafe:"Sigure",
+    liveMatches:"Meciuri live", seeAll:"Vezi toate \u2192",
+    aiPrediction:"Predicție AI", accuracy:"Acuratețe", h2hLast10:"Întâlniri directe (ultimele 10)",
+    betslip:"Bilet", odds:"Cotă", over25:"Peste 2.5 goluri", totalOdds:"Cotă totală", potentialWin:"Câștig potențial", saveBetslip:"Salvează biletul", stakePlaceholder:"Miză",
+    promoTitle:"Deblochează toate instrumentele", promoSub:"Predicții AI, statistici live, bilete nelimitate și semnale prioritare.", promoBtn:"Devino PRO \u2192 9,99\u20ac/lună",
+    topPredictors:"Top pronosticatori", accuracyShort:"acuratețe", emptySlip:"Apasă pe o cotă pentru a adăuga o predicție", savedMsg:"\u2713 Bilet salvat!", loading:"Se încarcă meciurile…", realData:"live", demoData:"date demo", halftime:"Pauză",
+    tkLive:"LIVE", tkSoon:"CURÂND", tkEnd:"FINAL", liveBadge:"LIVE",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Liga Bulgară", lgUCL:"Liga Campionilor",
+    oddDraw:"Egal", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Posesie", stShots:"Șuturi", stOnTarget:"Pe poartă", stCorners:"Cornere", stAvgGoalsMU:"Goluri med. Man Utd", stAvgGoalsLiv:"Goluri med. Liv",
+    aiText1:"<strong>Barcelona</strong> conduce și e în formă bună acasă. Real primește goluri în repriza a doua. Recomandare: <strong>Barça sau peste 2.5 goluri</strong>.",
+    register:"Înregistrare", logout:"Ieșire", usernameLabel:"Nume utilizator", emailLabel:"Email", passwordLabel:"Parolă", authSuccess:"Succes!", proSoon:"Plățile vor fi disponibile în curând!", errInvalidEmail:"Email invalid", errWeakPassword:"Parola trebuie să aibă cel puțin 6 caractere", errEmailTaken:"Acest email este deja înregistrat", errInvalidCreds:"Email sau parolă greșite", errServer:"Eroare server", errFillAll:"Completați toate câmpurile",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  sr: {
+    navHome:"Почетна", navPredictions:"Прогнозе", navLive:"Уживо", navStats:"Статистика", navTools:"Алати", navCommunity:"Заједница",
+    login:"Пријава", proAccess:"PRO приступ",
+    leagues:"Лиге", myPredictions:"Моје прогнозе", correctThisWeek:"Тачне ове недеље", totalAccuracy:"Укупна тачност", streak:"Низ", streakVal:"5 заредом",
+    tools:"Алати", toolAI:"AI прогноза", toolStats:"Статистика", toolH2H:"Међусобни сусрети", toolOdds:"Кретање квота", toolGoals:"Статистика голова", toolCorners:"Корнери и картони", toolInjuries:"Повреде и састав", toolCalc:"Калкулатор добитка",
+    tabLive:"Уживо (3)", tabToday:"Данас (14)", tabTomorrow:"Сутра (22)", tabTop:"Топ избори", tabSafe:"Сигурне",
+    liveMatches:"Мечеви уживо", seeAll:"Прикажи све \u2192",
+    aiPrediction:"AI прогноза", accuracy:"Тачност", h2hLast10:"Међусобни сусрети (последњих 10)",
+    betslip:"Тикет", odds:"Квота", over25:"Више од 2.5 гола", totalOdds:"Укупна квота", potentialWin:"Могући добитак", saveBetslip:"Сачувај тикет", stakePlaceholder:"Улог",
+    promoTitle:"Откључај све алате", promoSub:"AI прогнозе, статистика уживо, неограничени тикети и приоритетни сигнали.", promoBtn:"Постани PRO \u2192 9,99\u20ac/мес",
+    topPredictors:"Топ прогностичари", accuracyShort:"тачност", emptySlip:"Кликни на квоту да додаш прогнозу", savedMsg:"\u2713 Тикет је сачуван!", loading:"Учитавање мечева…", realData:"уживо", demoData:"демо подаци", halftime:"Полувреме",
+    tkLive:"УЖИВО", tkSoon:"УСКОРО", tkEnd:"КРАЈ", liveBadge:"УЖИВО",
+    lgPL:"Премијер лига", lgLaLiga:"Ла Лига", lgBundes:"Бундеслига", lgSerieA:"Серија А", lgLigue1:"Лига 1", lgErediv:"Ередивизија", lgParva:"Бугарска лига", lgUCL:"Лига шампиона",
+    oddDraw:"Нерешено", tmBarca:"Барса", tmReal:"Реал", tmMU:"Ман Ј.", tmLiv:"Ливерпул", tmBarcaFull:"Барселона",
+    stPossession:"Посед", stShots:"Шутеви", stOnTarget:"У оквир", stCorners:"Корнери", stAvgGoalsMU:"Просек гол. Ман Ј.", stAvgGoalsLiv:"Просек гол. Лив",
+    aiText1:"<strong>Барселона</strong> води и у добром је домаћем издању. Реал прима голове у другом полувремену. Препорука: <strong>Барса или више од 2.5 гола</strong>.",
+    register:"Регистрација", logout:"Одјава", usernameLabel:"Корисничко име", emailLabel:"Имејл", passwordLabel:"Лозинка", authSuccess:"Успешно!", proSoon:"Плаћање ускоро!", errInvalidEmail:"Неважећи имејл", errWeakPassword:"Лозинка мора имати најмање 6 знакова", errEmailTaken:"Овај имејл је већ регистрован", errInvalidCreds:"Погрешан имејл или лозинка", errServer:"Грешка сервера", errFillAll:"Попуните сва поља",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  el: {
+    navHome:"Αρχική", navPredictions:"Προβλέψεις", navLive:"Ζωντανά", navStats:"Στατιστικά", navTools:"Εργαλεία", navCommunity:"Κοινότητα",
+    login:"Σύνδεση", proAccess:"Πρόσβαση PRO",
+    leagues:"Πρωταθλήματα", myPredictions:"Οι προβλέψεις μου", correctThisWeek:"Σωστές αυτή την εβδομάδα", totalAccuracy:"Συνολική ακρίβεια", streak:"Σερί", streakVal:"5 στη σειρά",
+    tools:"Εργαλεία", toolAI:"Πρόβλεψη AI", toolStats:"Στατιστικά", toolH2H:"Αναμετρήσεις", toolOdds:"Κίνηση αποδόσεων", toolGoals:"Στατιστικά γκολ", toolCorners:"Κόρνερ & κάρτες", toolInjuries:"Τραυματισμοί & σύνθεση", toolCalc:"Υπολογιστής κέρδους",
+    tabLive:"Ζωντανά (3)", tabToday:"Σήμερα (14)", tabTomorrow:"Αύριο (22)", tabTop:"Κορυφαίες", tabSafe:"Ασφαλείς",
+    liveMatches:"Ζωντανοί αγώνες", seeAll:"Δείτε όλα \u2192",
+    aiPrediction:"Πρόβλεψη AI", accuracy:"Ακρίβεια", h2hLast10:"Αναμετρήσεις (τελευταίες 10)",
+    betslip:"Δελτίο", odds:"Απόδοση", over25:"Πάνω από 2.5 γκολ", totalOdds:"Συνολική απόδοση", potentialWin:"Πιθανό κέρδος", saveBetslip:"Αποθήκευση δελτίου", stakePlaceholder:"Ποντάρισμα",
+    promoTitle:"Ξεκλειδώστε όλα τα εργαλεία", promoSub:"Προβλέψεις AI, ζωντανά στατιστικά, απεριόριστα δελτία και σήματα προτεραιότητας.", promoBtn:"Γίνε PRO \u2192 9,99\u20ac/μήνα",
+    topPredictors:"Κορυφαίοι προγνώστες", accuracyShort:"ακρίβεια", emptySlip:"Κάντε κλικ σε μια απόδοση για να προσθέσετε πρόβλεψη", savedMsg:"\u2713 Το δελτίο αποθηκεύτηκε!", loading:"Φόρτωση αγώνων…", realData:"ζωντανά", demoData:"δεδομένα demo", halftime:"Ημίχρονο",
+    tkLive:"ΖΩΝΤΑΝΑ", tkSoon:"ΣΥΝΤΟΜΑ", tkEnd:"ΤΕΛΟΣ", liveBadge:"ΖΩΝΤΑΝΑ",
+    lgPL:"Πρέμιερ Λιγκ", lgLaLiga:"Λα Λίγκα", lgBundes:"Μπουντεσλίγκα", lgSerieA:"Σέριε Α", lgLigue1:"Λιγκ 1", lgErediv:"Έρεντιβισι", lgParva:"Βουλγαρική Λίγκα", lgUCL:"Τσάμπιονς Λιγκ",
+    oddDraw:"Ισοπαλία", tmBarca:"Μπάρτσα", tmReal:"Ρεάλ", tmMU:"Μαν. Γ.", tmLiv:"Λίβερπουλ", tmBarcaFull:"Μπαρτσελόνα",
+    stPossession:"Κατοχή", stShots:"Σουτ", stOnTarget:"Εντός", stCorners:"Κόρνερ", stAvgGoalsMU:"Μ.Ο. γκολ Μαν.Γ.", stAvgGoalsLiv:"Μ.Ο. γκολ Λίβ",
+    aiText1:"<strong>Μπαρτσελόνα</strong> προηγείται και είναι σε καλή φόρμα εντός έδρας. Η Ρεάλ δέχεται γκολ στο δεύτερο ημίχρονο. Σύσταση: <strong>Μπάρτσα ή πάνω από 2.5 γκολ</strong>.",
+    register:"Εγγραφή", logout:"Αποσύνδεση", usernameLabel:"Όνομα χρήστη", emailLabel:"Email", passwordLabel:"Κωδικός", authSuccess:"Επιτυχία!", proSoon:"Οι πληρωμές έρχονται σύντομα!", errInvalidEmail:"Μη έγκυρο email", errWeakPassword:"Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες", errEmailTaken:"Αυτό το email είναι ήδη εγγεγραμμένο", errInvalidCreds:"Λάθος email ή κωδικός", errServer:"Σφάλμα διακομιστή", errFillAll:"Συμπληρώστε όλα τα πεδία",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  it: {
+    navHome:"Home", navPredictions:"Pronostici", navLive:"Live", navStats:"Statistiche", navTools:"Strumenti", navCommunity:"Comunità",
+    login:"Accedi", proAccess:"Accesso PRO",
+    leagues:"Campionati", myPredictions:"I miei pronostici", correctThisWeek:"Corretti questa settimana", totalAccuracy:"Precisione totale", streak:"Serie", streakVal:"5 di fila",
+    tools:"Strumenti", toolAI:"Pronostico IA", toolStats:"Statistiche", toolH2H:"Scontri diretti", toolOdds:"Movimento quote", toolGoals:"Statistiche gol", toolCorners:"Corner & cartellini", toolInjuries:"Infortuni & formazione", toolCalc:"Calcolatore vincite",
+    tabLive:"Live (3)", tabToday:"Oggi (14)", tabTomorrow:"Domani (22)", tabTop:"Migliori", tabSafe:"Sicure",
+    liveMatches:"Partite live", seeAll:"Vedi tutte \u2192",
+    aiPrediction:"Pronostico IA", accuracy:"Precisione", h2hLast10:"Scontri diretti (ultimi 10)",
+    betslip:"Schedina", odds:"Quota", over25:"Over 2.5 gol", totalOdds:"Quota totale", potentialWin:"Vincita potenziale", saveBetslip:"Salva schedina", stakePlaceholder:"Puntata",
+    promoTitle:"Sblocca tutti gli strumenti", promoSub:"Pronostici IA, statistiche live, schedine illimitate e segnali prioritari.", promoBtn:"Diventa PRO \u2192 9,99\u20ac/mese",
+    topPredictors:"Migliori pronosticatori", accuracyShort:"precisione", emptySlip:"Clicca su una quota per aggiungere un pronostico", savedMsg:"\u2713 Schedina salvata!", loading:"Caricamento partite…", realData:"live", demoData:"dati demo", halftime:"Intervallo",
+    tkLive:"LIVE", tkSoon:"PRESTO", tkEnd:"FINE", liveBadge:"LIVE",
+    lgPL:"Premier League", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Lega Bulgara", lgUCL:"Champions League",
+    oddDraw:"Pareggio", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcellona",
+    stPossession:"Possesso", stShots:"Tiri", stOnTarget:"In porta", stCorners:"Corner", stAvgGoalsMU:"Media gol Man Utd", stAvgGoalsLiv:"Media gol Liv",
+    aiText1:"<strong>Barcellona</strong> è in vantaggio e in buona forma in casa. Il Real subisce gol nel secondo tempo. Raccomandazione: <strong>Barça o over 2.5 gol</strong>.",
+    register:"Registrati", logout:"Esci", usernameLabel:"Nome utente", emailLabel:"Email", passwordLabel:"Password", authSuccess:"Successo!", proSoon:"Pagamenti in arrivo!", errInvalidEmail:"Email non valida", errWeakPassword:"La password deve avere almeno 6 caratteri", errEmailTaken:"Questa email è già registrata", errInvalidCreds:"Email o password errati", errServer:"Errore del server", errFillAll:"Compila tutti i campi",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Puntata", calcOdds:"Quota", calcReturn:"Ritorno totale", calcProfit:"Profitto", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  tr: {
+    navHome:"Ana Sayfa", navPredictions:"Tahminler", navLive:"Canlı", navStats:"İstatistikler", navTools:"Araçlar", navCommunity:"Topluluk",
+    login:"Giriş", proAccess:"PRO erişim",
+    leagues:"Ligler", myPredictions:"Tahminlerim", correctThisWeek:"Bu hafta doğru", totalAccuracy:"Toplam isabet", streak:"Seri", streakVal:"5 üst üste",
+    tools:"Araçlar", toolAI:"AI Tahmini", toolStats:"İstatistikler", toolH2H:"Karşılıklı maçlar", toolOdds:"Oran hareketi", toolGoals:"Gol istatistikleri", toolCorners:"Kornerler & kartlar", toolInjuries:"Sakatlıklar & kadro", toolCalc:"Kazanç hesaplayıcı",
+    tabLive:"Canlı (3)", tabToday:"Bugün (14)", tabTomorrow:"Yarın (22)", tabTop:"En iyiler", tabSafe:"Güvenli",
+    liveMatches:"Canlı maçlar", seeAll:"Tümünü gör \u2192",
+    aiPrediction:"AI Tahmini", accuracy:"İsabet", h2hLast10:"Karşılıklı maçlar (son 10)",
+    betslip:"Kupon", odds:"Oran", over25:"2.5 üstü gol", totalOdds:"Toplam oran", potentialWin:"Olası kazanç", saveBetslip:"Kuponu kaydet", stakePlaceholder:"Bahis",
+    promoTitle:"Tüm araçların kilidini aç", promoSub:"AI tahminleri, canlı istatistikler, sınırsız kupon ve öncelikli sinyaller.", promoBtn:"PRO ol \u2192 9,99\u20ac/ay",
+    topPredictors:"En iyi tahminciler", accuracyShort:"isabet", emptySlip:"Tahmin eklemek için bir orana tıklayın", savedMsg:"\u2713 Kupon kaydedildi!", loading:"Maçlar yükleniyor…", realData:"canlı", demoData:"demo veri", halftime:"Devre arası",
+    tkLive:"CANLI", tkSoon:"YAKINDA", tkEnd:"BİTTİ", liveBadge:"CANLI",
+    lgPL:"Premier Lig", lgLaLiga:"La Liga", lgBundes:"Bundesliga", lgSerieA:"Serie A", lgLigue1:"Ligue 1", lgErediv:"Eredivisie", lgParva:"Bulgaristan Ligi", lgUCL:"Şampiyonlar Ligi",
+    oddDraw:"Beraberlik", tmBarca:"Barça", tmReal:"Real", tmMU:"Man Utd", tmLiv:"Liverpool", tmBarcaFull:"Barcelona",
+    stPossession:"Topa sahip olma", stShots:"Şutlar", stOnTarget:"İsabetli", stCorners:"Kornerler", stAvgGoalsMU:"Ort. gol Man Utd", stAvgGoalsLiv:"Ort. gol Liv",
+    aiText1:"<strong>Barcelona</strong> önde ve evinde iyi formda. Real ikinci yarıda gol yiyor. Tavsiye: <strong>Barça veya 2.5 üstü gol</strong>.",
+    register:"Kayıt ol", logout:"Çıkış", usernameLabel:"Kullanıcı adı", emailLabel:"E-posta", passwordLabel:"Şifre", authSuccess:"Başarılı!", proSoon:"Ödemeler yakında!", errInvalidEmail:"Geçersiz e-posta", errWeakPassword:"Şifre en az 6 karakter olmalı", errEmailTaken:"Bu e-posta zaten kayıtlı", errInvalidCreds:"Yanlış e-posta veya şifre", errServer:"Sunucu hatası", errFillAll:"Tüm alanları doldurun",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Bahis", calcOdds:"Oran", calcReturn:"Toplam getiri", calcProfit:"Kâr", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  },
+  uk: {
+    navHome:"Головна", navPredictions:"Прогнози", navLive:"Наживо", navStats:"Статистика", navTools:"Інструменти", navCommunity:"Спільнота",
+    login:"Увійти", proAccess:"PRO доступ",
+    leagues:"Ліги", myPredictions:"Мої прогнози", correctThisWeek:"Правильні цього тижня", totalAccuracy:"Загальна точність", streak:"Серія", streakVal:"5 поспіль",
+    tools:"Інструменти", toolAI:"AI прогноз", toolStats:"Статистика", toolH2H:"Особисті зустрічі", toolOdds:"Рух коефіцієнтів", toolGoals:"Статистика голів", toolCorners:"Кутові та картки", toolInjuries:"Травми та склад", toolCalc:"Калькулятор виграшу",
+    tabLive:"Наживо (3)", tabToday:"Сьогодні (14)", tabTomorrow:"Завтра (22)", tabTop:"Топ вибори", tabSafe:"Надійні",
+    liveMatches:"Матчі наживо", seeAll:"Дивитися всі \u2192",
+    aiPrediction:"AI прогноз", accuracy:"Точність", h2hLast10:"Особисті зустрічі (останні 10)",
+    betslip:"Купон", odds:"Коефіцієнт", over25:"Більше 2.5 голів", totalOdds:"Загальний коеф.", potentialWin:"Можливий виграш", saveBetslip:"Зберегти купон", stakePlaceholder:"Ставка",
+    promoTitle:"Розблокуй усі інструменти", promoSub:"AI прогнози, жива статистика, необмежені купони та пріоритетні сигнали.", promoBtn:"Стати PRO \u2192 9,99\u20ac/міс",
+    topPredictors:"Топ прогнозисти", accuracyShort:"точність", emptySlip:"Натисніть на коефіцієнт, щоб додати прогноз", savedMsg:"\u2713 Купон збережено!", loading:"Завантаження матчів…", realData:"наживо", demoData:"демо дані", halftime:"Перерва",
+    tkLive:"НАЖИВО", tkSoon:"СКОРО", tkEnd:"ЗАВЕРШЕНО", liveBadge:"НАЖИВО",
+    lgPL:"Прем'єр-ліга", lgLaLiga:"Ла Ліга", lgBundes:"Бундесліга", lgSerieA:"Серія А", lgLigue1:"Ліга 1", lgErediv:"Ередивізі", lgParva:"Болгарська ліга", lgUCL:"Ліга чемпіонів",
+    oddDraw:"Нічия", tmBarca:"Барса", tmReal:"Реал", tmMU:"Ман Юн.", tmLiv:"Ліверпуль", tmBarcaFull:"Барселона",
+    stPossession:"Володіння", stShots:"Удари", stOnTarget:"У створ", stCorners:"Кутові", stAvgGoalsMU:"Сер. голів Ман Юн.", stAvgGoalsLiv:"Сер. голів Лів",
+    aiText1:"<strong>Барселона</strong> веде і в гарній формі вдома. Реал пропускає голи в другому таймі. Рекомендація: <strong>Барса або більше 2.5 голів</strong>.",
+    register:"Реєстрація", logout:"Вихід", usernameLabel:"Ім'я користувача", emailLabel:"Ел. пошта", passwordLabel:"Пароль", authSuccess:"Успішно!", proSoon:"Оплата скоро з'явиться!", errInvalidEmail:"Невірна пошта", errWeakPassword:"Пароль має бути не менше 6 символів", errEmailTaken:"Ця пошта вже зареєстрована", errInvalidCreds:"Невірна пошта або пароль", errServer:"Помилка сервера", errFillAll:"Заповніть усі поля",
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коефіцієнт", calcReturn:"Загальна виплата", calcProfit:"Прибуток", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+  }
+};
+
+function setLanguage(lang) {
+  const dict = translations[lang];
+  if (!dict) return;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (dict[key] !== undefined) el.setAttribute('placeholder', dict[key]);
+  });
+  document.documentElement.lang = lang;
+  // Арабският е отдясно наляво (RTL)
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+  });
+  // обновяваме флага в бутона на менюто
+  const activeBtn = document.querySelector('.lang-btn[data-lang="' + lang + '"] .lf');
+  const toggleFlag = document.getElementById('langToggleFlag');
+  if (activeBtn && toggleFlag) toggleFlag.textContent = activeBtn.textContent;
+  // затваряме менюто
+  const dd = document.getElementById('langDropdown');
+  if (dd) dd.classList.remove('open');
+  if (typeof renderBetslip === 'function' && document.getElementById('betslipItems')) {
+    renderBetslip();
+  }
+  // обновяваме баджа "на живо/демо" според новия език
+  const badge = document.getElementById('dataBadge');
+  if (badge && typeof setDataBadge === 'function') {
+    setDataBadge(badge.getAttribute('data-badge-type') || 'demo');
+  }
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => setLanguage(btn.getAttribute('data-lang')));
+});
+
+// Отваряне/затваряне на падащото меню за езици
+const langToggleBtn = document.getElementById('langToggle');
+const langDropdownEl = document.getElementById('langDropdown');
+if (langToggleBtn && langDropdownEl) {
+  langToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    langDropdownEl.classList.toggle('open');
+  });
+  // затваряне при клик извън менюто
+  document.addEventListener('click', (e) => {
+    if (!langDropdownEl.contains(e.target) && !langToggleBtn.contains(e.target)) {
+      langDropdownEl.classList.remove('open');
+    }
+  });
+}
+
+// ===== КУПОН (BET SLIP) ЛОГИКА =====
+let betslip = []; // масив от {match, pick, odd, btnEl}
+
+function currentLang() {
+  const active = document.querySelector('.lang-btn.active');
+  return active ? active.getAttribute('data-lang') : 'bg';
+}
+
+function renderBetslip() {
+  const dict = translations[currentLang()];
+  const itemsBox = document.getElementById('betslipItems');
+  const countEl = document.getElementById('betslipCount');
+  const totalOddsEl = document.getElementById('totalOdds');
+  const potentialEl = document.getElementById('potentialWin');
+  const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
+
+  countEl.textContent = betslip.length;
+
+  if (betslip.length === 0) {
+    itemsBox.innerHTML = '<div class="betslip-empty">' + (dict.emptySlip || '') + '</div>';
+    totalOddsEl.textContent = '1.00';
+    potentialEl.textContent = '0.00';
+    return;
+  }
+
+  let html = '';
+  let totalOdds = 1;
+  betslip.forEach((b, i) => {
+    totalOdds *= b.odd;
+    html += '<div class="betslip-item">' +
+      '<button class="betslip-remove" data-index="' + i + '">×</button>' +
+      '<div class="betslip-match">' + b.match + '</div>' +
+      '<div class="betslip-pick">' + b.pick + '</div>' +
+      '<div class="betslip-odd">' + (dict.odds || 'Odds') + ': ' + b.odd.toFixed(2) + '</div>' +
+      '</div>';
+  });
+  itemsBox.innerHTML = html;
+
+  totalOddsEl.textContent = totalOdds.toFixed(2);
+  potentialEl.textContent = (totalOdds * stake).toFixed(2);
+
+  // бутоните за махане
+  itemsBox.querySelectorAll('.betslip-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-index'));
+      const removed = betslip[idx];
+      if (removed && removed.btnEl) removed.btnEl.classList.remove('selected');
+      betslip.splice(idx, 1);
+      renderBetslip();
+    });
+  });
+}
+
+// Клик на коефициент
+document.querySelectorAll('.odd-btn[data-match]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const match = btn.getAttribute('data-match');
+    const pick = btn.getAttribute('data-pick');
+    const odd = parseFloat(btn.getAttribute('data-odd'));
+
+    // ако вече е избран -> махаме
+    const existingIdx = betslip.findIndex(b => b.btnEl === btn);
+    if (existingIdx !== -1) {
+      betslip.splice(existingIdx, 1);
+      btn.classList.remove('selected');
+      renderBetslip();
+      return;
+    }
+
+    // махаме друг избор от същия мач (само 1 на мач)
+    const sameMatchIdx = betslip.findIndex(b => b.match === match);
+    if (sameMatchIdx !== -1) {
+      if (betslip[sameMatchIdx].btnEl) betslip[sameMatchIdx].btnEl.classList.remove('selected');
+      betslip.splice(sameMatchIdx, 1);
+    }
+
+    betslip.push({ match, pick, odd, btnEl: btn });
+    btn.classList.add('selected');
+    document.getElementById('savedMsg').style.display = 'none';
+    renderBetslip();
+  });
+});
+
+// Преизчисляване при смяна на залога
+document.getElementById('stakeInput').addEventListener('input', renderBetslip);
+
+// Запазване на купона
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const dict = translations[currentLang()];
+  if (betslip.length === 0) {
+    alert(dict.emptySlip || '');
+    return;
+  }
+  const msg = document.getElementById('savedMsg');
+  msg.style.display = 'block';
+});
+
+// ===== КРАЙ КУПОН =====
+
+// ===== РЕАЛНИ МАЧОВЕ НА ЖИВО (от сървъра) =====
+
+// Превежда минута/статус
+function matchTimeLabel(m, dict) {
+  if (m.isLive) {
+    if (m.status === 'HT') return (dict.halftime || 'HT');
+    return (m.elapsed || 0) + "'";
+  }
+  if (m.isFinished) return (dict.tkEnd || 'FT');
+  // предстоящ - показваме часа
+  const d = new Date(m.date);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Изгражда HTML за една карта от реални данни
+function buildMatchCard(m, dict) {
+  const liveCls = m.isLive ? 'live' : '';
+  const scoreLive = m.isLive ? 'live' : '';
+  const homeGoals = (m.home.goals !== null ? m.home.goals : '-');
+  const awayGoals = (m.away.goals !== null ? m.away.goals : '-');
+  const score = m.isLive || m.isFinished ? `${homeGoals}–${awayGoals}` : 'VS';
+
+  const badge = m.isLive
+    ? `<span class="live-badge">${dict.liveBadge || 'LIVE'}</span>`
+    : '';
+
+  const flag = m.flag ? `<img src="${m.flag}" style="width:16px;height:11px;vertical-align:middle;border-radius:2px;" onerror="this.style.display='none'"> ` : '';
+  const homeLogo = m.home.logo ? `<img src="${m.home.logo}" style="width:28px;height:28px;object-fit:contain;" onerror="this.style.display='none'">` : '⚽';
+  const awayLogo = m.away.logo ? `<img src="${m.away.logo}" style="width:28px;height:28px;object-fit:contain;" onerror="this.style.display='none'">` : '⚽';
+
+  return `
+    <div class="match-card ${liveCls}">
+      <div class="match-meta">
+        <div class="match-league">${flag}${m.league}${badge}</div>
+        <div class="match-time ${scoreLive}">${matchTimeLabel(m, dict)}</div>
+      </div>
+      <div class="match-teams">
+        <div class="team">
+          <div class="team-logo">${homeLogo}</div>
+          <div><div class="team-name">${m.home.name}</div></div>
+        </div>
+        <div class="score-box">
+          <div class="score ${scoreLive}">${score}</div>
+        </div>
+        <div class="team away">
+          <div class="team-logo">${awayLogo}</div>
+          <div><div class="team-name">${m.away.name}</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function loadLiveMatches() {
+  const dict = translations[currentLang()];
+  const container = document.getElementById('liveMatchesContainer');
+  const loading = document.getElementById('liveLoading');
+  const errorBox = document.getElementById('liveError');
+  const demo = document.getElementById('demoMatches');
+  const titleSpan = document.querySelector('[data-i18n="liveMatches"]');
+
+  loading.style.display = 'block';
+  errorBox.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/live');
+    if (!res.ok) throw new Error('server');
+    const data = await res.json();
+
+    loading.style.display = 'none';
+
+    if (data.matches && data.matches.length > 0) {
+      // Имаме реални мачове - скриваме демото
+      demo.style.display = 'none';
+      container.innerHTML = data.matches.slice(0, 15).map(m => buildMatchCard(m, dict)).join('');
+      setDataBadge('real');
+    } else {
+      // Няма мачове на живо точно сега - показваме демото с пояснение
+      demo.style.display = 'block';
+      container.innerHTML = '';
+      setDataBadge('demo');
+    }
+  } catch (err) {
+    // Сървърът не е достъпен (напр. отваряш файла локално) - показваме демото
+    loading.style.display = 'none';
+    demo.style.display = 'block';
+    container.innerHTML = '';
+    setDataBadge('demo');
+  }
+}
+
+// Създава/обновява баджа "на живо" или "демо данни" според текущия език
+function setDataBadge(type) {
+  const titleSpan = document.querySelector('[data-i18n="liveMatches"]');
+  if (!titleSpan) return;
+  let b = document.getElementById('dataBadge');
+  if (!b) {
+    b = document.createElement('span');
+    b.id = 'dataBadge';
+    titleSpan.after(b);
+  }
+  // запомняме типа, за да може setLanguage да обнови текста после
+  b.setAttribute('data-badge-type', type);
+  const dict = translations[currentLang()];
+  if (type === 'real') {
+    b.className = 'data-badge real';
+    b.textContent = '● ' + (dict.realData || '');
+  } else {
+    b.className = 'data-badge demo';
+    b.textContent = dict.demoData || '';
+  }
+}
+
+// Зареждаме при стартиране и опресняваме на всеки 30 сек
+loadLiveMatches();
+setInterval(loadLiveMatches, 30 * 1000);
+
+// ===== КРАЙ РЕАЛНИ МАЧОВЕ =====
+
+// ===== РЕГИСТРАЦИЯ / ВХОД =====
+let authMode = 'login'; // 'login' или 'register'
+let currentUser = null;
+
+const authModal = document.getElementById('authModal');
+const authMsg = document.getElementById('authMsg');
+
+function openAuth(mode) {
+  authMode = mode;
+  setAuthMode(mode);
+  authModal.classList.add('open');
+}
+function closeAuth() {
+  authModal.classList.remove('open');
+  authMsg.className = 'auth-msg';
+  authMsg.textContent = '';
+}
+function setAuthMode(mode) {
+  authMode = mode;
+  const dict = translations[currentLang()];
+  const isReg = mode === 'register';
+  document.getElementById('tabLogin').classList.toggle('active', !isReg);
+  document.getElementById('tabRegister').classList.toggle('active', isReg);
+  document.getElementById('fieldUsername').style.display = isReg ? 'block' : 'none';
+  document.getElementById('authTitle').textContent = isReg ? (dict.register || 'Регистрация') : (dict.login || 'Вход');
+  document.getElementById('authSubmit').textContent = isReg ? (dict.register || 'Регистрация') : (dict.login || 'Вход');
+  document.getElementById('authPassword').setAttribute('autocomplete', isReg ? 'new-password' : 'current-password');
+  authMsg.className = 'auth-msg';
+}
+
+function showAuthMsg(text, type) {
+  authMsg.className = 'auth-msg ' + type;
+  authMsg.textContent = text;
+}
+
+// Преобразува код за грешка в съобщение на текущия език
+function authErrorText(code) {
+  const dict = translations[currentLang()];
+  const map = {
+    invalid_email: dict.errInvalidEmail,
+    weak_password: dict.errWeakPassword,
+    email_taken: dict.errEmailTaken,
+    invalid_credentials: dict.errInvalidCreds,
+    server_error: dict.errServer
+  };
+  return map[code] || (dict.errServer || 'Грешка. Опитайте отново.');
+}
+
+// Обновява навигацията според това дали си влязъл
+function updateAuthUI() {
+  const dict = translations[currentLang()];
+  const loginBtn = document.getElementById('loginBtn');
+  const proBtn = document.getElementById('proBtn');
+  const userMenu = document.getElementById('userMenu');
+
+  if (currentUser) {
+    loginBtn.style.display = 'none';
+    userMenu.style.display = 'flex';
+    const name = currentUser.username || currentUser.email.split('@')[0];
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('userProTag').style.display = currentUser.is_pro ? 'inline-block' : 'none';
+    proBtn.style.display = currentUser.is_pro ? 'none' : 'inline-block';
+  } else {
+    loginBtn.style.display = 'inline-block';
+    userMenu.style.display = 'none';
+    proBtn.style.display = 'inline-block';
+  }
+}
+
+// Изпраща регистрация или вход
+async function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const username = document.getElementById('authUsername').value.trim();
+  const submitBtn = document.getElementById('authSubmit');
+  const dict = translations[currentLang()];
+
+  if (!email || !password) {
+    showAuthMsg(dict.errFillAll || 'Попълнете всички полета', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  const endpoint = authMode === 'register' ? '/api/register' : '/api/login';
+  const payload = authMode === 'register' ? { email, password, username } : { email, password };
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAuthMsg(authErrorText(data.error), 'error');
+      submitBtn.disabled = false;
+      return;
+    }
+
+    currentUser = data.user;
+    showAuthMsg(dict.authSuccess || 'Успешно!', 'success');
+    updateAuthUI();
+    setTimeout(closeAuth, 800);
+  } catch (err) {
+    showAuthMsg(dict.errServer || 'Грешка със сървъра', 'error');
+  }
+  submitBtn.disabled = false;
+}
+
+// Проверява дали вече има активна сесия при зареждане
+async function checkSession() {
+  try {
+    const res = await fetch('/api/me');
+    const data = await res.json();
+    currentUser = data.user;
+    updateAuthUI();
+  } catch { /* сървърът не е достъпен локално */ }
+}
+
+// Изход
+async function doLogout() {
+  try { await fetch('/api/logout', { method: 'POST' }); } catch {}
+  currentUser = null;
+  updateAuthUI();
+}
+
+// Свързваме бутоните
+document.getElementById('loginBtn').addEventListener('click', () => openAuth('login'));
+document.getElementById('proBtn').addEventListener('click', () => {
+  // ако не си влязъл -> първо регистрация; ако си -> към плащане (по-късно)
+  if (!currentUser) { openAuth('register'); }
+  else { alert(translations[currentLang()].proSoon || 'Плащането ще бъде добавено скоро!'); }
+});
+document.getElementById('authClose').addEventListener('click', closeAuth);
+document.getElementById('authModal').addEventListener('click', (e) => {
+  if (e.target === authModal) closeAuth();
+});
+document.getElementById('tabLogin').addEventListener('click', () => setAuthMode('login'));
+document.getElementById('tabRegister').addEventListener('click', () => setAuthMode('register'));
+document.getElementById('authSubmit').addEventListener('click', submitAuth);
+document.getElementById('logoutBtn').addEventListener('click', doLogout);
+// Enter за изпращане
+['authEmail','authPassword','authUsername'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitAuth();
+  });
+});
+
+checkSession();
+
+// ===== КРАЙ РЕГИСТРАЦИЯ / ВХОД =====
+
+// ===== ТАБОВЕ, ЛИГИ, ИНСТРУМЕНТИ =====
+
+// Табове (На живо / Днес / Утре / Топ / Сигурни)
+document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab[data-tab]').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    // тук по-късно ще зареждаме различни мачове според таба от сървъра
+  });
+});
+
+// Лиги вляво — маркиране при клик
+document.querySelectorAll('.league-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.league-item').forEach(l => l.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+
+// Инструменти — отваряне на прозорче с описание
+const toolModal = document.getElementById('toolModal');
+
+const toolIcons = {
+  ai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="2"/><path d="M12 7V4M9 3h6"/><circle cx="9" cy="13" r="1.2" fill="currentColor"/><circle cx="15" cy="13" r="1.2" fill="currentColor"/><path d="M2 12v3M22 12v3"/></svg>',
+  stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="7" rx="0.6" fill="currentColor" stroke="none"/><rect x="10.25" y="6" width="3.5" height="12" rx="0.6" fill="currentColor" stroke="none"/><rect x="15.5" y="14" width="3.5" height="4" rx="0.6" fill="currentColor" stroke="none"/></svg>',
+  h2h: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l4-1 13-13a2 2 0 0 0-3-3L4 17z"/><path d="M14 6l4 4"/></svg>',
+  odds: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-8"/><path d="M16 4h5v5"/></svg>',
+  goals: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7l2.5 1.8-1 3h-3l-1-3z" fill="currentColor" stroke="none"/></svg>',
+  corners: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18"/><path d="M5 4h11l-2.5 3.5L16 11H5" fill="currentColor" stroke="none" opacity="0.85"/></svg>',
+  injuries: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M12 10v6M9 13h6"/></svg>',
+  calc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><rect x="8" y="5" width="8" height="3" rx="0.5" fill="currentColor" stroke="none"/></svg>'
+};
+
+function openTool(toolKey) {
+  const dict = translations[currentLang()];
+  const titleKey = { ai:'toolAI', stats:'toolStats', h2h:'toolH2H', odds:'toolOdds', goals:'toolGoals', corners:'toolCorners', injuries:'toolInjuries', calc:'toolCalc' }[toolKey];
+  document.getElementById('toolModalIcon').innerHTML = toolIcons[toolKey] || '';
+  document.getElementById('toolModalTitle').textContent = dict[titleKey] || '';
+  const body = document.getElementById('toolModalBody');
+
+  if (toolKey === 'calc') {
+    // Калкулатор за печалба
+    body.innerHTML =
+      '<div class="tool-modal-desc">' + (dict.calcDesc || '') + '</div>' +
+      '<div class="calc-row">' +
+        '<div class="calc-field"><label>' + (dict.calcStake || 'Залог') + '</label><input type="number" id="calcStake" value="10" min="0"></div>' +
+        '<div class="calc-field"><label>' + (dict.calcOdds || 'Коефициент') + '</label><input type="number" id="calcOdds" value="2.00" step="0.01" min="1"></div>' +
+      '</div>' +
+      '<div class="calc-result">' +
+        '<div class="calc-result-label">' + (dict.calcReturn || 'Обща изплата') + '</div>' +
+        '<div class="calc-result-value" id="calcResult">20.00</div>' +
+        '<div class="calc-result-profit" id="calcProfit"></div>' +
+      '</div>';
+    const recalc = () => {
+      const stake = parseFloat(document.getElementById('calcStake').value) || 0;
+      const odds = parseFloat(document.getElementById('calcOdds').value) || 0;
+      const total = stake * odds;
+      const profit = total - stake;
+      document.getElementById('calcResult').textContent = total.toFixed(2);
+      document.getElementById('calcProfit').textContent = (dict.calcProfit || 'Печалба') + ': ' + profit.toFixed(2);
+    };
+    body.querySelector('#calcStake').addEventListener('input', recalc);
+    body.querySelector('#calcOdds').addEventListener('input', recalc);
+    recalc();
+  } else {
+    // Описание на инструмента + бележка че е PRO
+    const descKey = 'toolDesc_' + toolKey;
+    body.innerHTML =
+      '<div class="tool-modal-desc">' + (dict[descKey] || '') + '</div>' +
+      '<div class="tool-pro-note">⚡ ' + (dict.toolProNote || '') + '</div>';
+  }
+  toolModal.classList.add('open');
+}
+
+document.querySelectorAll('.tool-card[data-tool]').forEach(card => {
+  card.addEventListener('click', () => openTool(card.getAttribute('data-tool')));
+});
+document.getElementById('toolModalClose').addEventListener('click', () => toolModal.classList.remove('open'));
+toolModal.addEventListener('click', (e) => { if (e.target === toolModal) toolModal.classList.remove('open'); });
+
+// ===== КРАЙ ТАБОВЕ, ЛИГИ, ИНСТРУМЕНТИ =====
+
+// Прилага активния език при зареждане, за да са всички текстове консистентни
+setLanguage('bg');
+renderBetslip();
+
+
+
+</script>
+</body>
+</html>
