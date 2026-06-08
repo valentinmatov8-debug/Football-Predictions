@@ -74,6 +74,139 @@ function simplifyFixture(f) {
   };
 }
 
+// ---------- Помощни за AI прогноза ----------
+
+// Намира отбор по име, връща {id, name, logo} или null
+async function findTeam(name) {
+  const data = await apiFetch('/teams?search=' + encodeURIComponent(name));
+  const t = (data.response || [])[0];
+  if (!t) return null;
+  return { id: t.team.id, name: t.team.name, logo: t.team.logo, country: t.team.country, founded: t.team.founded };
+}
+
+// Тегли последните N мача на отбор и смята форма
+async function getTeamForm(teamId, count) {
+  const n = count || 5;
+  const data = await apiFetch('/fixtures?team=' + teamId + '&last=' + n);
+  const fixtures = data.response || [];
+  let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
+  const formStr = [];
+  const recent = [];
+
+  fixtures.forEach(f => {
+    const isHome = f.teams.home.id === teamId;
+    const gf = isHome ? f.goals.home : f.goals.away;
+    const ga = isHome ? f.goals.away : f.goals.home;
+    if (gf == null || ga == null) return;
+    goalsFor += gf; goalsAgainst += ga;
+    let result;
+    if (gf > ga) { wins++; result = 'W'; }
+    else if (gf < ga) { losses++; result = 'L'; }
+    else { draws++; result = 'D'; }
+    formStr.push(result);
+    const opp = isHome ? f.teams.away : f.teams.home;
+    recent.push({
+      opponent: opp.name, isHome: isHome,
+      score: gf + '-' + ga, result: result, date: f.fixture.date
+    });
+  });
+
+  const played = wins + draws + losses;
+  return {
+    played, wins, draws, losses, goalsFor, goalsAgainst,
+    form: formStr.join(''),
+    avgScored: played ? (goalsFor / played) : 0,
+    avgConceded: played ? (goalsAgainst / played) : 0,
+    // точки от форма: победа=3, равен=1
+    points: wins * 3 + draws,
+    recent: recent
+  };
+}
+
+// Директни срещи между два отбора
+async function getH2H(id1, id2, count) {
+  const n = count || 5;
+  const data = await apiFetch('/fixtures/headtohead?h2h=' + id1 + '-' + id2 + '&last=' + n);
+  const fixtures = data.response || [];
+  let team1Wins = 0, team2Wins = 0, draws = 0;
+  const matches = [];
+  fixtures.forEach(f => {
+    const h = f.goals.home, a = f.goals.away;
+    if (h == null || a == null) return;
+    const homeId = f.teams.home.id;
+    let winnerId = null;
+    if (h > a) winnerId = homeId;
+    else if (a > h) winnerId = f.teams.away.id;
+    if (winnerId === id1) team1Wins++;
+    else if (winnerId === id2) team2Wins++;
+    else draws++;
+    matches.push({
+      home: f.teams.home.name, away: f.teams.away.name,
+      score: h + '-' + a, date: f.fixture.date
+    });
+  });
+  return { total: matches.length, team1Wins, team2Wins, draws, matches };
+}
+
+// Изчислява прогноза от реалните данни (безплатна формула)
+function computePrediction(home, away, h2h) {
+  // Силов рейтинг: форма (точки от 5 мача) + голова разлика, с предимство за домакин
+  const homeStrength = home.points + (home.avgScored - home.avgConceded) * 2 + 1.2; // +1.2 домакинско предимство
+  const awayStrength = away.points + (away.avgScored - away.avgConceded) * 2;
+
+  // H2H бонус
+  let homeH2H = 0, awayH2H = 0;
+  if (h2h && h2h.total > 0) {
+    homeH2H = h2h.team1Wins * 0.8;
+    awayH2H = h2h.team2Wins * 0.8;
+  }
+
+  const homeScore = Math.max(0.1, homeStrength + homeH2H);
+  const awayScore = Math.max(0.1, awayStrength + awayH2H);
+
+  // Базови вероятности
+  const total = homeScore + awayScore;
+  let pHome = homeScore / total;
+  let pAway = awayScore / total;
+
+  // Дял за равенство според близостта на силите
+  const closeness = 1 - Math.abs(pHome - pAway); // 1 = равностойни
+  const pDraw = 0.18 + closeness * 0.14; // 18-32%
+
+  // Нормализираме трите да дават 100%
+  const scale = (1 - pDraw);
+  pHome = pHome * scale;
+  pAway = pAway * scale;
+
+  const homePct = Math.round(pHome * 100);
+  const awayPct = Math.round(pAway * 100);
+  const drawPct = 100 - homePct - awayPct;
+
+  // Очаквани голове
+  const expHomeGoals = (home.avgScored + away.avgConceded) / 2;
+  const expAwayGoals = (away.avgScored + home.avgConceded) / 2;
+  const expTotal = expHomeGoals + expAwayGoals;
+
+  // Препоръка
+  let pick, pickType;
+  if (homePct > awayPct && homePct > drawPct) { pick = home.name; pickType = '1'; }
+  else if (awayPct > homePct && awayPct > drawPct) { pick = away.name; pickType = '2'; }
+  else { pick = 'X'; pickType = 'X'; }
+
+  const over25 = expTotal > 2.5;
+  const bttsLikely = expHomeGoals > 0.9 && expAwayGoals > 0.9;
+
+  return {
+    homePct, drawPct, awayPct,
+    pick, pickType,
+    expHomeGoals: Math.round(expHomeGoals * 10) / 10,
+    expAwayGoals: Math.round(expAwayGoals * 10) / 10,
+    expTotalGoals: Math.round(expTotal * 10) / 10,
+    over25, bttsLikely,
+    confidence: Math.max(homePct, drawPct, awayPct)
+  };
+}
+
 // ---------- Помощни ----------
 function sendJSON(res, code, obj, headers) {
   const h = Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, headers || {});
@@ -227,6 +360,21 @@ async function handleApi(req, res, route, method) {
     // ---------- ФУТБОЛНИ ДАННИ ----------
     if (route === '/api/health') return sendJSON(res, 200, { ok: true, hasKey: !!API_KEY });
 
+    // Тестов endpoint - мачове от стар сезон (за проверка на безплатния план)
+    if (route === '/api/test') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      // Висша лига (league=39), сезон 2021, кръг 1 - достъпно в безплатния план
+      const data = await apiFetch('/fixtures?league=39&season=2021&from=2021-08-13&to=2021-08-16');
+      const matches = (data.response || []).map(simplifyFixture);
+      return sendJSON(res, 200, {
+        info: 'Тестови данни от стар сезон 2021',
+        rawResults: data.results,
+        rawErrors: data.errors,
+        count: matches.length,
+        matches: matches
+      });
+    }
+
     if (route === '/api/live') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
       const c = getCached('live', 20000); if (c) return sendJSON(res, 200, c);
@@ -252,6 +400,49 @@ async function handleApi(req, res, route, method) {
       const matches = (data.response || []).map(simplifyFixture);
       const result = { count: matches.length, matches: matches };
       setCached('tomorrow', result); return sendJSON(res, 200, result);
+    }
+
+    // ---------- AI ПРОГНОЗА (безплатна формула) ----------
+    if (route === '/api/predict' && method === 'POST') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const body = await readBody(req);
+      const homeName = (body.home || '').trim();
+      const awayName = (body.away || '').trim();
+      if (!homeName || !awayName) return sendJSON(res, 400, { error: 'missing_teams' });
+
+      // кеш по двойката отбори (за 10 мин), за да пестим заявки
+      const cacheKey = 'predict:' + homeName.toLowerCase() + ':' + awayName.toLowerCase();
+      const cached = getCached(cacheKey, 600000);
+      if (cached) return sendJSON(res, 200, cached);
+
+      // 1) Намираме двата отбора
+      const homeTeam = await findTeam(homeName);
+      if (!homeTeam) return sendJSON(res, 404, { error: 'home_not_found', name: homeName });
+      const awayTeam = await findTeam(awayName);
+      if (!awayTeam) return sendJSON(res, 404, { error: 'away_not_found', name: awayName });
+
+      // 2) Тегли форма и директни срещи
+      const [homeForm, awayForm, h2h] = await Promise.all([
+        getTeamForm(homeTeam.id, 5),
+        getTeamForm(awayTeam.id, 5),
+        getH2H(homeTeam.id, awayTeam.id, 5)
+      ]);
+
+      // 3) Смятаме прогнозата
+      const prediction = computePrediction(
+        Object.assign({ name: homeTeam.name }, homeForm),
+        Object.assign({ name: awayTeam.name }, awayForm),
+        h2h
+      );
+
+      const result = {
+        home: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo, country: homeTeam.country, form: homeForm },
+        away: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo, country: awayTeam.country, form: awayForm },
+        h2h: h2h,
+        prediction: prediction
+      };
+      setCached(cacheKey, result);
+      return sendJSON(res, 200, result);
     }
 
     return sendJSON(res, 404, { error: 'not_found' });
