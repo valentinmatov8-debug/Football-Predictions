@@ -402,6 +402,71 @@ async function handleApi(req, res, route, method) {
       setCached('tomorrow', result); return sendJSON(res, 200, result);
     }
 
+    // ---------- ПОДРОБНОСТИ ЗА МАЧ (събития + статистика) ----------
+    if (route === '/api/match') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const id = url.searchParams.get('id');
+      if (!id) return sendJSON(res, 400, { error: 'missing_id' });
+
+      // кеш 20 сек (живите мачове се менят често)
+      const cacheKey = 'match:' + id;
+      const cached = getCached(cacheKey, 20000);
+      if (cached) return sendJSON(res, 200, cached);
+
+      // основни данни + събития + статистика паралелно
+      const [fxData, evData, statData] = await Promise.all([
+        apiFetch('/fixtures?id=' + id).catch(() => ({ response: [] })),
+        apiFetch('/fixtures/events?fixture=' + id).catch(() => ({ response: [] })),
+        apiFetch('/fixtures/statistics?fixture=' + id).catch(() => ({ response: [] }))
+      ]);
+
+      const fx = (fxData.response || [])[0];
+      if (!fx) return sendJSON(res, 404, { error: 'match_not_found' });
+
+      // Събития (голове, картони, смени)
+      const events = (evData.response || []).map(e => ({
+        minute: e.time.elapsed, extra: e.time.extra,
+        type: e.type, detail: e.detail,
+        team: e.team.name, teamId: e.team.id,
+        player: e.player ? e.player.name : null,
+        assist: e.assist ? e.assist.name : null
+      }));
+
+      // Статистика по отбор -> правим я лесна за ползване
+      const stats = {};
+      (statData.response || []).forEach(teamStat => {
+        const tid = teamStat.team.id;
+        stats[tid] = {};
+        (teamStat.statistics || []).forEach(s => {
+          stats[tid][s.type] = s.value;
+        });
+      });
+
+      // Владение като числа (за сянката)
+      const homeId = fx.teams.home.id;
+      const awayId = fx.teams.away.id;
+      const parsePoss = (v) => {
+        if (v == null) return null;
+        const n = parseInt(String(v).replace('%', ''));
+        return isNaN(n) ? null : n;
+      };
+      let homePoss = stats[homeId] ? parsePoss(stats[homeId]['Ball Possession']) : null;
+      let awayPoss = stats[awayId] ? parsePoss(stats[awayId]['Ball Possession']) : null;
+
+      const result = {
+        id: fx.fixture.id,
+        league: fx.league.name,
+        status: fx.fixture.status.short,
+        elapsed: fx.fixture.status.elapsed,
+        home: { id: homeId, name: fx.teams.home.name, logo: fx.teams.home.logo, goals: fx.goals.home, possession: homePoss },
+        away: { id: awayId, name: fx.teams.away.name, logo: fx.teams.away.logo, goals: fx.goals.away, possession: awayPoss },
+        events: events,
+        stats: { home: stats[homeId] || {}, away: stats[awayId] || {} }
+      };
+      setCached(cacheKey, result);
+      return sendJSON(res, 200, result);
+    }
+
     // ---------- AI ПРОГНОЗА (безплатна формула) ----------
     if (route === '/api/predict' && method === 'POST') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
