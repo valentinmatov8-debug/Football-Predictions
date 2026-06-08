@@ -423,28 +423,44 @@ async function handleApi(req, res, route, method) {
       const fx = (fxData.response || [])[0];
       if (!fx) return sendJSON(res, 404, { error: 'match_not_found' });
 
-      // Събития (голове, картони, смени)
-      const events = (evData.response || []).map(e => ({
-        minute: e.time.elapsed, extra: e.time.extra,
-        type: e.type, detail: e.detail,
-        team: e.team.name, teamId: e.team.id,
-        player: e.player ? e.player.name : null,
-        assist: e.assist ? e.assist.name : null
-      }));
+      // Събития (голове, картони, смени) - със защита срещу липсващи полета
+      const events = (evData.response || []).map(e => {
+        const time = e.time || {};
+        const team = e.team || {};
+        return {
+          minute: time.elapsed != null ? time.elapsed : null,
+          extra: time.extra != null ? time.extra : null,
+          type: e.type || '',
+          detail: e.detail || '',
+          team: team.name || '',
+          teamId: team.id || null,
+          player: e.player ? e.player.name : null,
+          assist: e.assist ? e.assist.name : null
+        };
+      });
 
-      // Статистика по отбор -> правим я лесна за ползване
+      // Статистика по отбор -> правим я лесна за ползване (със защита)
       const stats = {};
       (statData.response || []).forEach(teamStat => {
+        if (!teamStat || !teamStat.team) return;
         const tid = teamStat.team.id;
         stats[tid] = {};
         (teamStat.statistics || []).forEach(s => {
-          stats[tid][s.type] = s.value;
+          if (s && s.type != null) stats[tid][s.type] = s.value;
         });
       });
 
       // Владение като числа (за сянката)
-      const homeId = fx.teams.home.id;
-      const awayId = fx.teams.away.id;
+      const teams = fx.teams || {};
+      const homeTeam = teams.home || {};
+      const awayTeam = teams.away || {};
+      const homeId = homeTeam.id;
+      const awayId = awayTeam.id;
+      const goals = fx.goals || {};
+      const fixture = fx.fixture || {};
+      const status = fixture.status || {};
+      const league = fx.league || {};
+
       const parsePoss = (v) => {
         if (v == null) return null;
         const n = parseInt(String(v).replace('%', ''));
@@ -454,12 +470,12 @@ async function handleApi(req, res, route, method) {
       let awayPoss = stats[awayId] ? parsePoss(stats[awayId]['Ball Possession']) : null;
 
       const result = {
-        id: fx.fixture.id,
-        league: fx.league.name,
-        status: fx.fixture.status.short,
-        elapsed: fx.fixture.status.elapsed,
-        home: { id: homeId, name: fx.teams.home.name, logo: fx.teams.home.logo, goals: fx.goals.home, possession: homePoss },
-        away: { id: awayId, name: fx.teams.away.name, logo: fx.teams.away.logo, goals: fx.goals.away, possession: awayPoss },
+        id: fixture.id,
+        league: league.name || '',
+        status: status.short || '',
+        elapsed: status.elapsed != null ? status.elapsed : null,
+        home: { id: homeId, name: homeTeam.name || '', logo: homeTeam.logo || '', goals: goals.home != null ? goals.home : 0, possession: homePoss },
+        away: { id: awayId, name: awayTeam.name || '', logo: awayTeam.logo || '', goals: goals.away != null ? goals.away : 0, possession: awayPoss },
         events: events,
         stats: { home: stats[homeId] || {}, away: stats[awayId] || {} }
       };
