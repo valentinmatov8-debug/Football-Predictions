@@ -1373,7 +1373,7 @@
 
 <!-- TICKER -->
 <div class="ticker-bar">
-  <div class="ticker-inner">
+  <div class="ticker-inner" id="tickerInner">
     <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">Barcelona 2–1 Real Madrid</span> 67'</div>
     <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">Man Utd 0–0 Liverpool</span> 34'</div>
     <div class="ticker-item">🔴 <span data-i18n="tkLive">НА ЖИВО</span> <span class="ticker-score">PSG 3–0 Lyon</span> 78'</div>
@@ -1865,7 +1865,8 @@ const translations = {
     stPossession:"Притежание", stShots:"Удари", stOnTarget:"На рамката", stCorners:"Корнери", stAvgGoalsMU:"Ср. гола МЮ", stAvgGoalsLiv:"Ср. гола Лив",
     aiText1:"<strong>Barcelona</strong> води и е в добра форма у дома. Real изпуска голове в 2-то полувреме. Препоръка: <strong>Barça или над 2.5 гола</strong>.",
     register:"Регистрация", logout:"Изход", usernameLabel:"Потребителско име", emailLabel:"Имейл", passwordLabel:"Парола", authSuccess:"Успешно!", proSoon:"Плащането ще бъде добавено скоро!", errInvalidEmail:"Невалиден имейл", errWeakPassword:"Паролата трябва да е поне 6 знака", errEmailTaken:"Този имейл вече е регистриран", errInvalidCreds:"Грешен имейл или парола", errServer:"Грешка със сървъра", errFillAll:"Попълнете всички полета",
-    calcDesc:"Изчисли потенциалната печалба от залог.", calcStake:"Залог", calcOdds:"Коефициент", calcReturn:"Обща изплата", calcProfit:"Печалба", toolProNote:"Пълните данни са достъпни с PRO абонамент.", toolDesc_ai:"AI прогнози на база форма, статистики и история на отборите.", toolDesc_stats:"Подробни статистики за всеки отбор и мач.", toolDesc_h2h:"История на директните срещи между два отбора.", toolDesc_odds:"Проследяване как се движат коефициентите във времето.", toolDesc_goals:"Среден брой голове, голове по полувремена и тенденции.", toolDesc_corners:"Статистика за корнери, жълти и червени картони.", toolDesc_injuries:"Контузени играчи и очаквани стартови състави.", toolDesc_calc:"Калкулатор за печалба."
+    calcDesc:"Изчисли потенциалната печалба от залог.", calcStake:"Залог", calcOdds:"Коефициент", calcReturn:"Обща изплата", calcProfit:"Печалба", toolProNote:"Пълните данни са достъпни с PRO абонамент.", toolDesc_ai:"AI прогнози на база форма, статистики и история на отборите.", toolDesc_stats:"Подробни статистики за всеки отбор и мач.", toolDesc_h2h:"История на директните срещи между два отбора.", toolDesc_odds:"Проследяване как се движат коефициентите във времето.", toolDesc_goals:"Среден брой голове, голове по полувремена и тенденции.", toolDesc_corners:"Статистика за корнери, жълти и червени картони.", toolDesc_injuries:"Контузени играчи и очаквани стартови състави.", toolDesc_calc:"Калкулатор за печалба.",
+    aiIntro:"Въведи два отбора за AI анализ на база реални данни.", aiHomeTeam:"Домакин", aiAwayTeam:"Гост", aiAnalyze:"Анализирай", aiLoading:"Анализирам реалните данни...", aiFillBoth:"Въведи и двата отбора", aiError:"Грешка при анализа", aiTeamNotFound:"Не намерих отбора", aiDraw:"Равен", aiRecommend:"Препоръка", aiConfidence:"увереност", aiExpGoals:"Очаквани голове", aiOver25:"Над 2.5 гола", aiUnder25:"Под 2.5 гола", aiBtts:"Двата бележат", aiForm:"форма", aiGoals:"голове", aiH2H:"Директни срещи", aiDisclaimer:"Прогнозата е на база реални данни за форма и статистика. Залагай отговорно.", formW:"П", formD:"Р", formL:"З"
   },
   en: {
     navHome:"Home", navPredictions:"Predictions", navLive:"Live", navStats:"Stats", navTools:"Tools", navCommunity:"Community",
@@ -1884,7 +1885,8 @@ const translations = {
     stPossession:"Possession", stShots:"Shots", stOnTarget:"On target", stCorners:"Corners", stAvgGoalsMU:"Avg goals Man Utd", stAvgGoalsLiv:"Avg goals Liv",
     aiText1:"<strong>Barcelona</strong> are ahead and in good home form. Real concede goals in the second half. Recommendation: <strong>Barça or over 2.5 goals</strong>.",
     register:"Sign up", logout:"Log out", usernameLabel:"Username", emailLabel:"Email", passwordLabel:"Password", authSuccess:"Success!", proSoon:"Payments coming soon!", errInvalidEmail:"Invalid email", errWeakPassword:"Password must be at least 6 characters", errEmailTaken:"This email is already registered", errInvalidCreds:"Wrong email or password", errServer:"Server error", errFillAll:"Please fill all fields",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   no: {
     navHome:"Hjem", navPredictions:"Tips", navLive:"Direkte", navStats:"Statistikk", navTools:"Verktøy", navCommunity:"Fellesskap",
@@ -1903,7 +1905,8 @@ const translations = {
     stPossession:"Ballbesittelse", stShots:"Skudd", stOnTarget:"På mål", stCorners:"Hjørner", stAvgGoalsMU:"Snittmål ManU", stAvgGoalsLiv:"Snittmål Liv",
     aiText1:"<strong>Barcelona</strong> leder og er i god form hjemme. Real slipper inn mål i andre omgang. Anbefaling: <strong>Barça eller over 2,5 mål</strong>.",
     register:"Registrer", logout:"Logg ut", usernameLabel:"Brukernavn", emailLabel:"E-post", passwordLabel:"Passord", authSuccess:"Vellykket!", proSoon:"Betaling kommer snart!", errInvalidEmail:"Ugyldig e-post", errWeakPassword:"Passordet må være minst 6 tegn", errEmailTaken:"Denne e-posten er allerede registrert", errInvalidCreds:"Feil e-post eller passord", errServer:"Serverfeil", errFillAll:"Fyll ut alle felt",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   es: {
     navHome:"Inicio", navPredictions:"Pronósticos", navLive:"En vivo", navStats:"Estadísticas", navTools:"Herramientas", navCommunity:"Comunidad",
@@ -1922,7 +1925,8 @@ const translations = {
     stPossession:"Posesión", stShots:"Tiros", stOnTarget:"A puerta", stCorners:"Córners", stAvgGoalsMU:"Goles prom. ManU", stAvgGoalsLiv:"Goles prom. Liv",
     aiText1:"<strong>Barcelona</strong> domina y está en buena forma en casa. El Real encaja goles en la segunda parte. Recomendación: <strong>Barça o más de 2.5 goles</strong>.",
     register:"Registrarse", logout:"Salir", usernameLabel:"Nombre de usuario", emailLabel:"Correo", passwordLabel:"Contraseña", authSuccess:"¡Éxito!", proSoon:"¡Pagos próximamente!", errInvalidEmail:"Correo inválido", errWeakPassword:"La contraseña debe tener al menos 6 caracteres", errEmailTaken:"Este correo ya está registrado", errInvalidCreds:"Correo o contraseña incorrectos", errServer:"Error del servidor", errFillAll:"Complete todos los campos",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Apuesta", calcOdds:"Cuota", calcReturn:"Retorno total", calcProfit:"Ganancia", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Apuesta", calcOdds:"Cuota", calcReturn:"Retorno total", calcProfit:"Ganancia", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   ru: {
     navHome:"Главная", navPredictions:"Прогнозы", navLive:"В прямом эфире", navStats:"Статистика", navTools:"Инструменты", navCommunity:"Сообщество",
@@ -1941,7 +1945,8 @@ const translations = {
     stPossession:"Владение", stShots:"Удары", stOnTarget:"В створ", stCorners:"Угловые", stAvgGoalsMU:"Ср. голов МЮ", stAvgGoalsLiv:"Ср. голов Лив",
     aiText1:"<strong>Barcelona</strong> ведёт и в хорошей форме дома. Real пропускает голы во втором тайме. Рекомендация: <strong>Barça или больше 2.5 голов</strong>.",
     register:"Регистрация", logout:"Выход", usernameLabel:"Имя пользователя", emailLabel:"Эл. почта", passwordLabel:"Пароль", authSuccess:"Успешно!", proSoon:"Оплата скоро появится!", errInvalidEmail:"Неверная почта", errWeakPassword:"Пароль не менее 6 символов", errEmailTaken:"Эта почта уже зарегистрирована", errInvalidCreds:"Неверная почта или пароль", errServer:"Ошибка сервера", errFillAll:"Заполните все поля",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коэффициент", calcReturn:"Общая выплата", calcProfit:"Прибыль", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коэффициент", calcReturn:"Общая выплата", calcProfit:"Прибыль", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   fr: {
     navHome:"Accueil", navPredictions:"Pronostics", navLive:"En direct", navStats:"Statistiques", navTools:"Outils", navCommunity:"Communauté",
@@ -1960,7 +1965,8 @@ const translations = {
     stPossession:"Possession", stShots:"Tirs", stOnTarget:"Cadrés", stCorners:"Corners", stAvgGoalsMU:"Buts moy. ManU", stAvgGoalsLiv:"Buts moy. Liv",
     aiText1:"<strong>Barcelone</strong> mène et est en forme à domicile. Le Real encaisse en seconde période. Recommandation : <strong>Barça ou plus de 2,5 buts</strong>.",
     register:"S'inscrire", logout:"Déconnexion", usernameLabel:"Nom d'utilisateur", emailLabel:"E-mail", passwordLabel:"Mot de passe", authSuccess:"Réussi !", proSoon:"Paiements bientôt disponibles !", errInvalidEmail:"E-mail invalide", errWeakPassword:"Le mot de passe doit comporter au moins 6 caractères", errEmailTaken:"Cet e-mail est déjà enregistré", errInvalidCreds:"E-mail ou mot de passe incorrect", errServer:"Erreur du serveur", errFillAll:"Remplissez tous les champs",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Mise", calcOdds:"Cote", calcReturn:"Retour total", calcProfit:"Gain", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Mise", calcOdds:"Cote", calcReturn:"Retour total", calcProfit:"Gain", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   de: {
     navHome:"Start", navPredictions:"Tipps", navLive:"Live", navStats:"Statistik", navTools:"Tools", navCommunity:"Community",
@@ -1979,7 +1985,8 @@ const translations = {
     stPossession:"Ballbesitz", stShots:"Schüsse", stOnTarget:"Aufs Tor", stCorners:"Ecken", stAvgGoalsMU:"Ø Tore ManU", stAvgGoalsLiv:"Ø Tore Liv",
     aiText1:"<strong>Barcelona</strong> führt und ist zu Hause in guter Form. Real kassiert Tore in der zweiten Halbzeit. Empfehlung: <strong>Barça oder über 2,5 Tore</strong>.",
     register:"Registrieren", logout:"Abmelden", usernameLabel:"Benutzername", emailLabel:"E-Mail", passwordLabel:"Passwort", authSuccess:"Erfolgreich!", proSoon:"Zahlungen bald verfügbar!", errInvalidEmail:"Ungültige E-Mail", errWeakPassword:"Passwort muss mindestens 6 Zeichen haben", errEmailTaken:"Diese E-Mail ist bereits registriert", errInvalidCreds:"Falsche E-Mail oder Passwort", errServer:"Serverfehler", errFillAll:"Bitte alle Felder ausfüllen",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Einsatz", calcOdds:"Quote", calcReturn:"Gesamtauszahlung", calcProfit:"Gewinn", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Einsatz", calcOdds:"Quote", calcReturn:"Gesamtauszahlung", calcProfit:"Gewinn", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   ar: {
     navHome:"الرئيسية", navPredictions:"التوقعات", navLive:"مباشر", navStats:"إحصائيات", navTools:"أدوات", navCommunity:"المجتمع",
@@ -1998,7 +2005,8 @@ const translations = {
     stPossession:"الاستحواذ", stShots:"التسديدات", stOnTarget:"على المرمى", stCorners:"الركنيات", stAvgGoalsMU:"معدل أهداف مان يونايتد", stAvgGoalsLiv:"معدل أهداف ليفربول",
     aiText1:"<strong>برشلونة</strong> متقدم وفي حالة جيدة في الديار. ريال يستقبل أهدافاً في الشوط الثاني. التوصية: <strong>برشلونة أو أكثر من 2.5 هدف</strong>.",
     register:"تسجيل", logout:"خروج", usernameLabel:"اسم المستخدم", emailLabel:"البريد الإلكتروني", passwordLabel:"كلمة المرور", authSuccess:"تم بنجاح!", proSoon:"الدفع قريباً!", errInvalidEmail:"بريد غير صالح", errWeakPassword:"يجب أن تكون كلمة المرور 6 أحرف على الأقل", errEmailTaken:"هذا البريد مسجل بالفعل", errInvalidCreds:"بريد أو كلمة مرور خاطئة", errServer:"خطأ في الخادم", errFillAll:"يرجى ملء جميع الحقول",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   zh: {
     navHome:"首页", navPredictions:"预测", navLive:"直播", navStats:"统计", navTools:"工具", navCommunity:"社区",
@@ -2017,7 +2025,8 @@ const translations = {
     stPossession:"控球率", stShots:"射门", stOnTarget:"射正", stCorners:"角球", stAvgGoalsMU:"曼联场均进球", stAvgGoalsLiv:"利物浦场均进球",
     aiText1:"<strong>巴塞罗那</strong>领先且主场状态良好。皇马在下半场容易失球。建议：<strong>巴萨或大于2.5球</strong>。",
     register:"注册", logout:"退出", usernameLabel:"用户名", emailLabel:"邮箱", passwordLabel:"密码", authSuccess:"成功！", proSoon:"支付功能即将推出！", errInvalidEmail:"邮箱无效", errWeakPassword:"密码至少6个字符", errEmailTaken:"该邮箱已注册", errInvalidCreds:"邮箱或密码错误", errServer:"服务器错误", errFillAll:"请填写所有字段",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   ko: {
     navHome:"홈", navPredictions:"예측", navLive:"라이브", navStats:"통계", navTools:"도구", navCommunity:"커뮤니티",
@@ -2036,7 +2045,8 @@ const translations = {
     stPossession:"점유율", stShots:"슈팅", stOnTarget:"유효슈팅", stCorners:"코너킥", stAvgGoalsMU:"맨유 평균 득점", stAvgGoalsLiv:"리버풀 평균 득점",
     aiText1:"<strong>바르셀로나</strong>가 앞서고 있으며 홈에서 좋은 폼을 보이고 있습니다. 레알은 후반전에 실점하는 경향이 있습니다. 추천: <strong>바르사 또는 2.5골 오버</strong>.",
     register:"회원가입", logout:"로그아웃", usernameLabel:"사용자 이름", emailLabel:"이메일", passwordLabel:"비밀번호", authSuccess:"성공!", proSoon:"결제 기능 곧 출시!", errInvalidEmail:"잘못된 이메일", errWeakPassword:"비밀번호는 6자 이상이어야 합니다", errEmailTaken:"이미 등록된 이메일입니다", errInvalidCreds:"이메일 또는 비밀번호 오류", errServer:"서버 오류", errFillAll:"모든 항목을 입력하세요",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   pt: {
     navHome:"Início", navPredictions:"Previsões", navLive:"Ao vivo", navStats:"Estatísticas", navTools:"Ferramentas", navCommunity:"Comunidade",
@@ -2055,7 +2065,8 @@ const translations = {
     stPossession:"Posse", stShots:"Remates", stOnTarget:"À baliza", stCorners:"Cantos", stAvgGoalsMU:"Golos méd. Man Utd", stAvgGoalsLiv:"Golos méd. Liv",
     aiText1:"<strong>Barcelona</strong> está na frente e em boa forma em casa. O Real sofre golos na segunda parte. Recomendação: <strong>Barça ou mais de 2.5 golos</strong>.",
     register:"Registar", logout:"Sair", usernameLabel:"Nome de utilizador", emailLabel:"Email", passwordLabel:"Palavra-passe", authSuccess:"Sucesso!", proSoon:"Pagamentos em breve!", errInvalidEmail:"Email inválido", errWeakPassword:"A palavra-passe deve ter pelo menos 6 caracteres", errEmailTaken:"Este email já está registado", errInvalidCreds:"Email ou palavra-passe errados", errServer:"Erro do servidor", errFillAll:"Preencha todos os campos",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Aposta", calcOdds:"Odd", calcReturn:"Retorno total", calcProfit:"Lucro", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Aposta", calcOdds:"Odd", calcReturn:"Retorno total", calcProfit:"Lucro", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   ro: {
     navHome:"Acasă", navPredictions:"Predicții", navLive:"Live", navStats:"Statistici", navTools:"Instrumente", navCommunity:"Comunitate",
@@ -2074,7 +2085,8 @@ const translations = {
     stPossession:"Posesie", stShots:"Șuturi", stOnTarget:"Pe poartă", stCorners:"Cornere", stAvgGoalsMU:"Goluri med. Man Utd", stAvgGoalsLiv:"Goluri med. Liv",
     aiText1:"<strong>Barcelona</strong> conduce și e în formă bună acasă. Real primește goluri în repriza a doua. Recomandare: <strong>Barça sau peste 2.5 goluri</strong>.",
     register:"Înregistrare", logout:"Ieșire", usernameLabel:"Nume utilizator", emailLabel:"Email", passwordLabel:"Parolă", authSuccess:"Succes!", proSoon:"Plățile vor fi disponibile în curând!", errInvalidEmail:"Email invalid", errWeakPassword:"Parola trebuie să aibă cel puțin 6 caractere", errEmailTaken:"Acest email este deja înregistrat", errInvalidCreds:"Email sau parolă greșite", errServer:"Eroare server", errFillAll:"Completați toate câmpurile",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   sr: {
     navHome:"Почетна", navPredictions:"Прогнозе", navLive:"Уживо", navStats:"Статистика", navTools:"Алати", navCommunity:"Заједница",
@@ -2093,7 +2105,8 @@ const translations = {
     stPossession:"Посед", stShots:"Шутеви", stOnTarget:"У оквир", stCorners:"Корнери", stAvgGoalsMU:"Просек гол. Ман Ј.", stAvgGoalsLiv:"Просек гол. Лив",
     aiText1:"<strong>Барселона</strong> води и у добром је домаћем издању. Реал прима голове у другом полувремену. Препорука: <strong>Барса или више од 2.5 гола</strong>.",
     register:"Регистрација", logout:"Одјава", usernameLabel:"Корисничко име", emailLabel:"Имејл", passwordLabel:"Лозинка", authSuccess:"Успешно!", proSoon:"Плаћање ускоро!", errInvalidEmail:"Неважећи имејл", errWeakPassword:"Лозинка мора имати најмање 6 знакова", errEmailTaken:"Овај имејл је већ регистрован", errInvalidCreds:"Погрешан имејл или лозинка", errServer:"Грешка сервера", errFillAll:"Попуните сва поља",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   el: {
     navHome:"Αρχική", navPredictions:"Προβλέψεις", navLive:"Ζωντανά", navStats:"Στατιστικά", navTools:"Εργαλεία", navCommunity:"Κοινότητα",
@@ -2112,7 +2125,8 @@ const translations = {
     stPossession:"Κατοχή", stShots:"Σουτ", stOnTarget:"Εντός", stCorners:"Κόρνερ", stAvgGoalsMU:"Μ.Ο. γκολ Μαν.Γ.", stAvgGoalsLiv:"Μ.Ο. γκολ Λίβ",
     aiText1:"<strong>Μπαρτσελόνα</strong> προηγείται και είναι σε καλή φόρμα εντός έδρας. Η Ρεάλ δέχεται γκολ στο δεύτερο ημίχρονο. Σύσταση: <strong>Μπάρτσα ή πάνω από 2.5 γκολ</strong>.",
     register:"Εγγραφή", logout:"Αποσύνδεση", usernameLabel:"Όνομα χρήστη", emailLabel:"Email", passwordLabel:"Κωδικός", authSuccess:"Επιτυχία!", proSoon:"Οι πληρωμές έρχονται σύντομα!", errInvalidEmail:"Μη έγκυρο email", errWeakPassword:"Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες", errEmailTaken:"Αυτό το email είναι ήδη εγγεγραμμένο", errInvalidCreds:"Λάθος email ή κωδικός", errServer:"Σφάλμα διακομιστή", errFillAll:"Συμπληρώστε όλα τα πεδία",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   it: {
     navHome:"Home", navPredictions:"Pronostici", navLive:"Live", navStats:"Statistiche", navTools:"Strumenti", navCommunity:"Comunità",
@@ -2131,7 +2145,8 @@ const translations = {
     stPossession:"Possesso", stShots:"Tiri", stOnTarget:"In porta", stCorners:"Corner", stAvgGoalsMU:"Media gol Man Utd", stAvgGoalsLiv:"Media gol Liv",
     aiText1:"<strong>Barcellona</strong> è in vantaggio e in buona forma in casa. Il Real subisce gol nel secondo tempo. Raccomandazione: <strong>Barça o over 2.5 gol</strong>.",
     register:"Registrati", logout:"Esci", usernameLabel:"Nome utente", emailLabel:"Email", passwordLabel:"Password", authSuccess:"Successo!", proSoon:"Pagamenti in arrivo!", errInvalidEmail:"Email non valida", errWeakPassword:"La password deve avere almeno 6 caratteri", errEmailTaken:"Questa email è già registrata", errInvalidCreds:"Email o password errati", errServer:"Errore del server", errFillAll:"Compila tutti i campi",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Puntata", calcOdds:"Quota", calcReturn:"Ritorno totale", calcProfit:"Profitto", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Puntata", calcOdds:"Quota", calcReturn:"Ritorno totale", calcProfit:"Profitto", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   tr: {
     navHome:"Ana Sayfa", navPredictions:"Tahminler", navLive:"Canlı", navStats:"İstatistikler", navTools:"Araçlar", navCommunity:"Topluluk",
@@ -2150,7 +2165,8 @@ const translations = {
     stPossession:"Topa sahip olma", stShots:"Şutlar", stOnTarget:"İsabetli", stCorners:"Kornerler", stAvgGoalsMU:"Ort. gol Man Utd", stAvgGoalsLiv:"Ort. gol Liv",
     aiText1:"<strong>Barcelona</strong> önde ve evinde iyi formda. Real ikinci yarıda gol yiyor. Tavsiye: <strong>Barça veya 2.5 üstü gol</strong>.",
     register:"Kayıt ol", logout:"Çıkış", usernameLabel:"Kullanıcı adı", emailLabel:"E-posta", passwordLabel:"Şifre", authSuccess:"Başarılı!", proSoon:"Ödemeler yakında!", errInvalidEmail:"Geçersiz e-posta", errWeakPassword:"Şifre en az 6 karakter olmalı", errEmailTaken:"Bu e-posta zaten kayıtlı", errInvalidCreds:"Yanlış e-posta veya şifre", errServer:"Sunucu hatası", errFillAll:"Tüm alanları doldurun",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Bahis", calcOdds:"Oran", calcReturn:"Toplam getiri", calcProfit:"Kâr", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Bahis", calcOdds:"Oran", calcReturn:"Toplam getiri", calcProfit:"Kâr", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   },
   uk: {
     navHome:"Головна", navPredictions:"Прогнози", navLive:"Наживо", navStats:"Статистика", navTools:"Інструменти", navCommunity:"Спільнота",
@@ -2169,7 +2185,8 @@ const translations = {
     stPossession:"Володіння", stShots:"Удари", stOnTarget:"У створ", stCorners:"Кутові", stAvgGoalsMU:"Сер. голів Ман Юн.", stAvgGoalsLiv:"Сер. голів Лів",
     aiText1:"<strong>Барселона</strong> веде і в гарній формі вдома. Реал пропускає голи в другому таймі. Рекомендація: <strong>Барса або більше 2.5 голів</strong>.",
     register:"Реєстрація", logout:"Вихід", usernameLabel:"Ім'я користувача", emailLabel:"Ел. пошта", passwordLabel:"Пароль", authSuccess:"Успішно!", proSoon:"Оплата скоро з'явиться!", errInvalidEmail:"Невірна пошта", errWeakPassword:"Пароль має бути не менше 6 символів", errEmailTaken:"Ця пошта вже зареєстрована", errInvalidCreds:"Невірна пошта або пароль", errServer:"Помилка сервера", errFillAll:"Заповніть усі поля",
-    calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коефіцієнт", calcReturn:"Загальна виплата", calcProfit:"Прибуток", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator."
+    calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коефіцієнт", calcReturn:"Загальна виплата", calcProfit:"Прибуток", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
+    aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.", formW:"W", formD:"D", formL:"L"
   }
 };
 
@@ -2382,6 +2399,64 @@ function buildMatchCard(m, dict) {
     </div>`;
 }
 
+// Обновява горната лента (тикер) с реални мачове: живи + предстоящи днес
+async function loadTicker() {
+  const inner = document.getElementById('tickerInner');
+  if (!inner) return;
+  const dict = translations[currentLang()];
+
+  try {
+    // Дърпаме паралелно живи и днешни мачове
+    const [liveRes, todayRes] = await Promise.all([
+      fetch('/api/live').then(r => r.ok ? r.json() : { matches: [] }).catch(() => ({ matches: [] })),
+      fetch('/api/today').then(r => r.ok ? r.json() : { matches: [] }).catch(() => ({ matches: [] }))
+    ]);
+
+    const live = liveRes.matches || [];
+    const today = todayRes.matches || [];
+
+    // Ако няма никакви реални данни - оставяме демото както си е
+    if (live.length === 0 && today.length === 0) return;
+
+    const items = [];
+
+    // 1) Живи мачове
+    live.slice(0, 10).forEach(m => {
+      const min = m.elapsed ? m.elapsed + "'" : '';
+      items.push('<div class="ticker-item">🔴 <span>' + (dict.tkLive || 'НА ЖИВО') + '</span> <span class="ticker-score">' +
+        escapeHtml(m.home.name) + ' ' + (m.home.goals ?? 0) + '–' + (m.away.goals ?? 0) + ' ' + escapeHtml(m.away.name) + '</span> ' + min + '</div>');
+    });
+
+    // 2) Предстоящи днес (още незапочнали) и приключили
+    today.forEach(m => {
+      if (m.isLive) return; // вече ги добавихме
+      if (m.isFinished) {
+        items.push('<div class="ticker-item">✅ <span>' + (dict.tkEnd || 'КРАЙ') + '</span> <span class="ticker-score">' +
+          escapeHtml(m.home.name) + ' ' + (m.home.goals ?? 0) + '–' + (m.away.goals ?? 0) + ' ' + escapeHtml(m.away.name) + '</span></div>');
+      } else {
+        // предстоящ - показваме часа
+        const t = new Date(m.date);
+        const hh = String(t.getHours()).padStart(2, '0');
+        const mm = String(t.getMinutes()).padStart(2, '0');
+        items.push('<div class="ticker-item">⏰ <span>' + (dict.tkSoon || 'СКОРО') + '</span> <span class="ticker-score">' +
+          escapeHtml(m.home.name) + ' – ' + escapeHtml(m.away.name) + '</span> ' + hh + ':' + mm + '</div>');
+      }
+    });
+
+    if (items.length === 0) return;
+
+    // Дублираме списъка за безшевен цикъл на анимацията
+    inner.innerHTML = items.join('') + items.join('');
+  } catch (err) {
+    // при грешка оставяме демото
+  }
+}
+
+// Малка помощна функция срещу счупване от специални символи
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 async function loadLiveMatches() {
   const dict = translations[currentLang()];
   const container = document.getElementById('liveMatchesContainer');
@@ -2445,6 +2520,10 @@ function setDataBadge(type) {
 // Зареждаме при стартиране и опресняваме на всеки 30 сек
 loadLiveMatches();
 setInterval(loadLiveMatches, 30 * 1000);
+
+// Горната лента (тикер) - реални мачове, опресняване на всеки 60 сек
+loadTicker();
+setInterval(loadTicker, 60 * 1000);
 
 // ===== КРАЙ РЕАЛНИ МАЧОВЕ =====
 
@@ -2635,12 +2714,159 @@ const toolIcons = {
   calc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><rect x="8" y="5" width="8" height="3" rx="0.5" fill="currentColor" stroke="none"/></svg>'
 };
 
+// Извиква сървъра за AI прогноза и показва резултата
+async function analyzeAI(dict) {
+  const homeInput = document.getElementById('aiHome');
+  const awayInput = document.getElementById('aiAway');
+  const btn = document.getElementById('aiAnalyzeBtn');
+  const result = document.getElementById('aiResult');
+  const home = homeInput.value.trim();
+  const away = awayInput.value.trim();
+
+  if (!home || !away) {
+    result.innerHTML = '<div class="auth-msg error" style="display:block">' + (dict.aiFillBoth || 'Въведи и двата отбора') + '</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  result.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted)">⏳ ' + (dict.aiLoading || 'Анализирам реалните данни...') + '</div>';
+
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ home, away })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      let msg = dict.aiError || 'Грешка при анализа';
+      if (data.error === 'home_not_found') msg = (dict.aiTeamNotFound || 'Не намерих отбора') + ': ' + home;
+      else if (data.error === 'away_not_found') msg = (dict.aiTeamNotFound || 'Не намерих отбора') + ': ' + away;
+      result.innerHTML = '<div class="auth-msg error" style="display:block">' + msg + '</div>';
+      btn.disabled = false;
+      return;
+    }
+
+    result.innerHTML = buildPredictionHTML(data, dict);
+  } catch (err) {
+    result.innerHTML = '<div class="auth-msg error" style="display:block">' + (dict.aiError || 'Грешка при анализа') + '</div>';
+  }
+  btn.disabled = false;
+}
+
+// Изгражда HTML с резултата от прогнозата
+function buildPredictionHTML(data, dict) {
+  const p = data.prediction;
+  const h = data.home, a = data.away;
+
+  // лента с форма (W/D/L цветни точки)
+  const formDots = (formStr) => {
+    return (formStr || '').split('').map(r => {
+      const cls = r === 'W' ? 'w' : (r === 'L' ? 'l' : 'd');
+      const label = r === 'W' ? (dict.formW || 'П') : (r === 'L' ? (dict.formL || 'З') : (dict.formD || 'Р'));
+      return '<span class="form-dot ' + cls + '">' + label + '</span>';
+    }).join('');
+  };
+
+  const pickLabel = p.pickType === '1' ? h.name : (p.pickType === '2' ? a.name : (dict.aiDraw || 'Равен'));
+
+  return '' +
+    // Заглавие с отборите
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px">' +
+      '<div style="text-align:center;flex:1">' +
+        (h.logo ? '<img src="' + h.logo + '" style="width:40px;height:40px;object-fit:contain">' : '') +
+        '<div style="font-size:13px;font-weight:600;margin-top:4px">' + escapeHtmlClient(h.name) + '</div>' +
+      '</div>' +
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--muted)">VS</div>' +
+      '<div style="text-align:center;flex:1">' +
+        (a.logo ? '<img src="' + a.logo + '" style="width:40px;height:40px;object-fit:contain">' : '') +
+        '<div style="font-size:13px;font-weight:600;margin-top:4px">' + escapeHtmlClient(a.name) + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Вероятности 1 / X / 2
+    '<div style="display:flex;gap:6px;margin-bottom:14px">' +
+      probBox('1 ' + escapeHtmlClient(h.name), p.homePct, p.pickType === '1') +
+      probBox(dict.aiDraw || 'Равен', p.drawPct, p.pickType === 'X') +
+      probBox('2 ' + escapeHtmlClient(a.name), p.awayPct, p.pickType === '2') +
+    '</div>' +
+
+    // Препоръка
+    '<div style="background:rgba(0,255,135,0.1);border:1px solid rgba(0,255,135,0.3);border-radius:10px;padding:12px;margin-bottom:14px">' +
+      '<div style="font-size:12px;color:var(--muted)">' + (dict.aiRecommend || 'Препоръка') + '</div>' +
+      '<div style="font-size:16px;font-weight:700;color:var(--green)">' + escapeHtmlClient(pickLabel) +
+        ' <span style="font-size:12px;color:var(--muted)">(' + (dict.aiConfidence || 'увереност') + ': ' + p.confidence + '%)</span></div>' +
+      '<div style="font-size:13px;margin-top:6px">' + (dict.aiExpGoals || 'Очаквани голове') + ': <b>' + p.expHomeGoals + ' - ' + p.expAwayGoals + '</b>' +
+        ' · ' + (p.over25 ? (dict.aiOver25 || 'Над 2.5 гола') : (dict.aiUnder25 || 'Под 2.5 гола')) +
+        (p.bttsLikely ? ' · ' + (dict.aiBtts || 'Двата бележат') : '') + '</div>' +
+    '</div>' +
+
+    // Форма на двата отбора
+    '<div style="display:flex;gap:10px;margin-bottom:10px">' +
+      '<div style="flex:1">' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + escapeHtmlClient(h.name) + ' · ' + (dict.aiForm || 'форма') + '</div>' +
+        '<div class="form-dots">' + formDots(h.form.form) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + (dict.aiGoals || 'голове') + ': ' + h.form.goalsFor + ':' + h.form.goalsAgainst + '</div>' +
+      '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + escapeHtmlClient(a.name) + ' · ' + (dict.aiForm || 'форма') + '</div>' +
+        '<div class="form-dots">' + formDots(a.form.form) + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + (dict.aiGoals || 'голове') + ': ' + a.form.goalsFor + ':' + a.form.goalsAgainst + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // H2H
+    (data.h2h && data.h2h.total > 0 ?
+      '<div style="font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px">' +
+        (dict.aiH2H || 'Директни срещи') + ': ' + escapeHtmlClient(h.name) + ' ' + data.h2h.team1Wins + ' - ' +
+        data.h2h.draws + ' - ' + data.h2h.team2Wins + ' ' + escapeHtmlClient(a.name) +
+      '</div>' : '') +
+
+    '<div class="tool-pro-note" style="margin-top:14px">⚡ ' + (dict.aiDisclaimer || 'Прогнозата е на база реални данни за форма и статистика. Залагай отговорно.') + '</div>';
+}
+
+function probBox(label, pct, isPick) {
+  const bg = isPick ? 'rgba(0,255,135,0.15)' : 'var(--card2)';
+  const border = isPick ? 'var(--green)' : 'var(--border)';
+  const color = isPick ? 'var(--green)' : 'var(--text)';
+  return '<div style="flex:1;text-align:center;background:' + bg + ';border:1px solid ' + border + ';border-radius:8px;padding:10px 4px">' +
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:24px;color:' + color + '">' + pct + '%</div>' +
+    '<div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + label + '</div>' +
+  '</div>';
+}
+
+// клиентска версия на escape (сървърната е escapeHtml в друг обхват)
+function escapeHtmlClient(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function openTool(toolKey) {
   const dict = translations[currentLang()];
   const titleKey = { ai:'toolAI', stats:'toolStats', h2h:'toolH2H', odds:'toolOdds', goals:'toolGoals', corners:'toolCorners', injuries:'toolInjuries', calc:'toolCalc' }[toolKey];
   document.getElementById('toolModalIcon').innerHTML = toolIcons[toolKey] || '';
   document.getElementById('toolModalTitle').textContent = dict[titleKey] || '';
   const body = document.getElementById('toolModalBody');
+
+  if (toolKey === 'ai') {
+    // AI Прогноза - въвеждане на два отбора + анализ
+    body.innerHTML =
+      '<div class="tool-modal-desc">' + (dict.aiIntro || 'Въведи два отбора за AI анализ на база реални данни.') + '</div>' +
+      '<div class="calc-row">' +
+        '<div class="calc-field"><label>' + (dict.aiHomeTeam || 'Домакин') + '</label><input type="text" id="aiHome" placeholder="Barcelona"></div>' +
+        '<div class="calc-field"><label>' + (dict.aiAwayTeam || 'Гост') + '</label><input type="text" id="aiAway" placeholder="Real Madrid"></div>' +
+      '</div>' +
+      '<button class="auth-submit" id="aiAnalyzeBtn">' + (dict.aiAnalyze || 'Анализирай') + '</button>' +
+      '<div id="aiResult" style="margin-top:16px"></div>';
+
+    const btn = body.querySelector('#aiAnalyzeBtn');
+    const runAnalysis = () => analyzeAI(dict);
+    btn.addEventListener('click', runAnalysis);
+    body.querySelector('#aiHome').addEventListener('keydown', e => { if (e.key === 'Enter') runAnalysis(); });
+    body.querySelector('#aiAway').addEventListener('keydown', e => { if (e.key === 'Enter') runAnalysis(); });
+    toolModal.classList.add('open');
+    return;
+  }
 
   if (toolKey === 'calc') {
     // Калкулатор за печалба
