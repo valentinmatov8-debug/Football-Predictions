@@ -405,7 +405,9 @@ async function handleApi(req, res, route, method) {
     // ---------- ПОДРОБНОСТИ ЗА МАЧ (събития + статистика) ----------
     if (route === '/api/match') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const id = url.searchParams.get('id');
+      // извличаме id директно от req.url (тук няма променлива url)
+      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
+      const id = reqUrl.searchParams.get('id');
       if (!id) return sendJSON(res, 400, { error: 'missing_id' });
 
       // кеш 20 сек (живите мачове се менят често)
