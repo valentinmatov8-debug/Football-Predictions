@@ -558,6 +558,71 @@ async function handleApi(req, res, route, method) {
       }
     }
 
+    // ---------- ПОДСКАЗВАЧ: търсене на отбори по име ----------
+    if (route === '/api/search-team') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
+      const q = (reqUrl.searchParams.get('q') || '').trim();
+      if (q.length < 3) return sendJSON(res, 200, { teams: [] });
+
+      const cacheKey = 'search:' + q.toLowerCase();
+      const cached = getCached(cacheKey, 3600000); // 1 час
+      if (cached) return sendJSON(res, 200, cached);
+
+      try {
+        const data = await apiFetch('/teams?search=' + encodeURIComponent(q));
+        const teams = (data.response || []).slice(0, 8).map(t => ({
+          name: t.team.name,
+          logo: t.team.logo,
+          country: t.team.country
+        }));
+        const result = { teams: teams };
+        setCached(cacheKey, result);
+        return sendJSON(res, 200, result);
+      } catch (err) {
+        return sendJSON(res, 200, { teams: [] });
+      }
+    }
+
+    // ---------- СТАТИСТИКА ЗА ЕДИН ОТБОР ----------
+    if (route === '/api/team-stats' && method === 'POST') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const body = await readBody(req);
+      const teamName = (body.team || '').trim();
+      if (!teamName) return sendJSON(res, 400, { error: 'no_team' });
+
+      const cacheKey = 'teamstats:' + teamName.toLowerCase();
+      const cached = getCached(cacheKey, 600000); // 10 мин
+      if (cached) return sendJSON(res, 200, cached);
+
+      // намираме отбора
+      const team = await findTeam(teamName);
+      if (!team) return sendJSON(res, 404, { error: 'team_not_found' });
+
+      // взимаме формата от последните 10 мача
+      const form = await getTeamForm(team.id, 10);
+
+      const result = {
+        team: { id: team.id, name: team.name, logo: team.logo, country: team.country, founded: team.founded },
+        stats: {
+          played: form.played,
+          wins: form.wins,
+          draws: form.draws,
+          losses: form.losses,
+          goalsFor: form.goalsFor,
+          goalsAgainst: form.goalsAgainst,
+          goalDiff: form.goalsFor - form.goalsAgainst,
+          avgScored: Math.round(form.avgScored * 100) / 100,
+          avgConceded: Math.round(form.avgConceded * 100) / 100,
+          form: form.form,
+          points: form.points
+        },
+        recent: form.recent
+      };
+      setCached(cacheKey, result);
+      return sendJSON(res, 200, result);
+    }
+
     // ---------- AI ПРОГНОЗА (безплатна формула) ----------
     if (route === '/api/predict' && method === 'POST') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
