@@ -2845,6 +2845,8 @@ function startBallMovement() {
 
 // Закачаме клик на живите мачове (делегирано)
 document.addEventListener('click', (e) => {
+  // ако кликът е върху AI бутона или резултата - не отваряме терена
+  if (e.target.closest('.match-ai-select')) return;
   const card = e.target.closest('[data-match-id]');
   if (card) {
     openMatch(card.getAttribute('data-match-id'));
