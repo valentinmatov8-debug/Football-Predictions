@@ -40,6 +40,13 @@ async function initDatabase() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS visits (
+        country_code TEXT PRIMARY KEY,
+        country_name TEXT,
+        count INTEGER DEFAULT 0
+      );
+    `);
     console.log('✓ Базата данни е готова');
   } catch (err) {
     console.error('Грешка при създаване на таблиците:', err.message);
@@ -66,12 +73,38 @@ function simplifyFixture(f) {
   const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(status);
   const isFinished = ['FT','AET','PEN'].includes(status);
   return {
-    id: f.fixture.id, league: f.league.name, flag: f.league.flag,
+    id: f.fixture.id, league: f.league.name, leagueId: f.league.id, flag: f.league.flag,
     date: f.fixture.date, status: status, elapsed: f.fixture.status.elapsed,
     isLive: isLive, isFinished: isFinished,
     home: { name: f.teams.home.name, logo: f.teams.home.logo, goals: f.goals.home },
     away: { name: f.teams.away.name, logo: f.teams.away.logo, goals: f.goals.away }
   };
+}
+
+// ---------- Засичане на държава по IP + броене на посещение ----------
+async function recordVisit(req) {
+  try {
+    // взимаме реалния IP (Render праща X-Forwarded-For)
+    const fwd = req.headers['x-forwarded-for'];
+    const ip = fwd ? fwd.split(',')[0].trim() : (req.socket.remoteAddress || '');
+    if (!ip || ip.startsWith('127.') || ip === '::1') return; // локален - пропускаме
+
+    // безплатно засичане на държава
+    const geoRes = await fetch('https://ipapi.co/' + ip + '/json/');
+    if (!geoRes.ok) return;
+    const geo = await geoRes.json();
+    const code = geo.country_code || 'XX';
+    const name = geo.country_name || 'Unknown';
+
+    // увеличаваме брояча за тази държава (UPSERT)
+    await pool.query(
+      `INSERT INTO visits (country_code, country_name, count) VALUES ($1, $2, 1)
+       ON CONFLICT (country_code) DO UPDATE SET count = visits.count + 1, country_name = $2`,
+      [code, name]
+    );
+  } catch (err) {
+    // тихо - посещенията не са критични
+  }
 }
 
 // ---------- Помощни за AI прогноза ----------
@@ -485,6 +518,46 @@ async function handleApi(req, res, route, method) {
       return sendJSON(res, 200, result);
     }
 
+    // ---------- ЛИГИ С ЖИВИ МАЧОВЕ (за филтъра) ----------
+    if (route === '/api/leagues-live') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const cached = getCached('leagues-live', 30000);
+      if (cached) return sendJSON(res, 200, cached);
+      const data = await apiFetch('/fixtures?live=all');
+      const matches = (data.response || []).map(simplifyFixture);
+      // групираме по лига
+      const leaguesMap = {};
+      matches.forEach(m => {
+        if (m.leagueId == null) return;
+        if (!leaguesMap[m.leagueId]) {
+          leaguesMap[m.leagueId] = { id: m.leagueId, name: m.league, flag: m.flag, count: 0 };
+        }
+        leaguesMap[m.leagueId].count++;
+      });
+      const leagues = Object.values(leaguesMap).sort((a, b) => b.count - a.count);
+      const result = { total: matches.length, leagues: leagues };
+      setCached('leagues-live', result);
+      return sendJSON(res, 200, result);
+    }
+
+    // ---------- ПОСЕЩЕНИЯ ПО ДЪРЖАВИ + PRO АКАУНТИ ----------
+    if (route === '/api/visits') {
+      try {
+        const visitsRes = await pool.query(
+          'SELECT country_code, country_name, count FROM visits ORDER BY count DESC LIMIT 12'
+        );
+        const totalRes = await pool.query('SELECT COALESCE(SUM(count),0) AS total FROM visits');
+        const proRes = await pool.query('SELECT COUNT(*) AS pro FROM users WHERE is_pro = true');
+        return sendJSON(res, 200, {
+          countries: visitsRes.rows,
+          total: parseInt(totalRes.rows[0].total) || 0,
+          proAccounts: parseInt(proRes.rows[0].pro) || 0
+        });
+      } catch (err) {
+        return sendJSON(res, 200, { countries: [], total: 0, proAccounts: 0 });
+      }
+    }
+
     // ---------- AI ПРОГНОЗА (безплатна формула) ----------
     if (route === '/api/predict' && method === 'POST') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
@@ -542,6 +615,10 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://' + req.headers.host);
   const route = url.pathname;
   if (route.startsWith('/api/')) { handleApi(req, res, route, req.method); return; }
+  // броим посещение само при зареждане на главната страница
+  if (route === '/' || route === '/index.html') {
+    recordVisit(req); // не чакаме - върви фоново
+  }
   let filePath = path.join(PUBLIC_DIR, route === '/' ? 'index.html' : route);
   if (!filePath.startsWith(PUBLIC_DIR)) filePath = path.join(PUBLIC_DIR, 'index.html');
   serveStatic(res, filePath);
