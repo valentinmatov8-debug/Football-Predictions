@@ -771,6 +771,28 @@
   .match-card.live::before { background: var(--live); }
   .match-card.high-conf::before { background: var(--green); }
 
+  .match-ai-select {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .ai-check-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .ai-check-label:hover { color: var(--green); }
+  .ai-check {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+
   .match-card:hover {
     border-color: rgba(0,255,135,0.2);
   }
@@ -1992,7 +2014,7 @@ const translations = {
     calcDesc:"Изчисли потенциалната печалба от залог.", calcStake:"Залог", calcOdds:"Коефициент", calcReturn:"Обща изплата", calcProfit:"Печалба", toolProNote:"Пълните данни са достъпни с PRO абонамент.", toolDesc_ai:"AI прогнози на база форма, статистики и история на отборите.", toolDesc_stats:"Подробни статистики за всеки отбор и мач.", toolDesc_h2h:"История на директните срещи между два отбора.", toolDesc_odds:"Проследяване как се движат коефициентите във времето.", toolDesc_goals:"Среден брой голове, голове по полувремена и тенденции.", toolDesc_corners:"Статистика за корнери, жълти и червени картони.", toolDesc_injuries:"Контузени играчи и очаквани стартови състави.", toolDesc_calc:"Калкулатор за печалба.",
     aiIntro:"Въведи два отбора за AI анализ на база реални данни.", aiHomeTeam:"Домакин", aiAwayTeam:"Гост", aiAnalyze:"Анализирай", aiLoading:"Анализирам реалните данни...", aiFillBoth:"Въведи и двата отбора", aiError:"Грешка при анализа", aiTeamNotFound:"Не намерих отбора", aiDraw:"Равен", aiRecommend:"Препоръка", aiConfidence:"увереност", aiExpGoals:"Очаквани голове", aiOver25:"Над 2.5 гола", aiUnder25:"Под 2.5 гола", aiBtts:"Двата бележат", aiForm:"форма", aiGoals:"голове", aiH2H:"Директни срещи", aiDisclaimer:"Прогнозата е на база реални данни за форма и статистика. Залагай отговорно.",
     liveDetailsHint:"Натисни за статистика на живо", matchLoading:"Зареждам мача...", matchError:"Грешка при зареждане", matchLive:"на живо", statPossession:"Владение", statShotsOn:"Удари във врата", statShots:"Общо удари", statCorners:"Корнери", statFouls:"Нарушения", statYellow:"Жълти картони", statRed:"Червени картони", matchNoStats:"Все още няма статистика", matchNoEvents:"Все още няма събития", matchTimeline:"Събития по минути", evAssist:"асистенция", goalText:"ГОЛ",
-    allLeagues:"Всички", leaguesLoading:"Зареждам лиги на живо...", noLiveLeagues:"Няма мачове на живо в момента", visitsTitle:"Посещения", totalVisits:"Общо посещения", proAccounts:"PRO акаунти", byCountry:"По държави", visitsLoading:"Зареждам...", noVisits:"Все още няма данни", formW:"П", formD:"Р", formL:"З"
+    allLeagues:"Всички", leaguesLoading:"Зареждам лиги на живо...", noLiveLeagues:"Няма мачове на живо в момента", visitsTitle:"Посещения", totalVisits:"Общо посещения", proAccounts:"PRO акаунти", byCountry:"По държави", visitsLoading:"Зареждам...", noVisits:"Все още няма данни", selectForAI:"Избери за AI Прогноза", formW:"П", formD:"Р", formL:"З"
   },
   en: {
     navHome:"Home", navPredictions:"Predictions", navLive:"Live", navStats:"Stats", navTools:"Tools", navCommunity:"Community",
@@ -2014,7 +2036,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"All", leaguesLoading:"Loading live leagues...", noLiveLeagues:"No live matches right now", visitsTitle:"Visitors", totalVisits:"Total visits", proAccounts:"PRO accounts", byCountry:"By country", visitsLoading:"Loading...", noVisits:"No data yet", formW:"W", formD:"D", formL:"L"
+    allLeagues:"All", leaguesLoading:"Loading live leagues...", noLiveLeagues:"No live matches right now", visitsTitle:"Visitors", totalVisits:"Total visits", proAccounts:"PRO accounts", byCountry:"By country", visitsLoading:"Loading...", noVisits:"No data yet", selectForAI:"Select for AI Prediction", formW:"W", formD:"D", formL:"L"
   },
   no: {
     navHome:"Hjem", navPredictions:"Tips", navLive:"Direkte", navStats:"Statistikk", navTools:"Verktøy", navCommunity:"Fellesskap",
@@ -2036,7 +2058,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Alle", leaguesLoading:"Laster ligaer...", noLiveLeagues:"Ingen direktekamper nå", visitsTitle:"Besøkende", totalVisits:"Totale besøk", proAccounts:"PRO-kontoer", byCountry:"Etter land", visitsLoading:"Laster...", noVisits:"Ingen data ennå", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Alle", leaguesLoading:"Laster ligaer...", noLiveLeagues:"Ingen direktekamper nå", visitsTitle:"Besøkende", totalVisits:"Totale besøk", proAccounts:"PRO-kontoer", byCountry:"Etter land", visitsLoading:"Laster...", noVisits:"Ingen data ennå", selectForAI:"Velg for AI-tips", formW:"W", formD:"D", formL:"L"
   },
   es: {
     navHome:"Inicio", navPredictions:"Pronósticos", navLive:"En vivo", navStats:"Estadísticas", navTools:"Herramientas", navCommunity:"Comunidad",
@@ -2058,7 +2080,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Apuesta", calcOdds:"Cuota", calcReturn:"Retorno total", calcProfit:"Ganancia", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Todas", leaguesLoading:"Cargando ligas...", noLiveLeagues:"No hay partidos en vivo ahora", visitsTitle:"Visitas", totalVisits:"Visitas totales", proAccounts:"Cuentas PRO", byCountry:"Por país", visitsLoading:"Cargando...", noVisits:"Sin datos aún", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Todas", leaguesLoading:"Cargando ligas...", noLiveLeagues:"No hay partidos en vivo ahora", visitsTitle:"Visitas", totalVisits:"Visitas totales", proAccounts:"Cuentas PRO", byCountry:"Por país", visitsLoading:"Cargando...", noVisits:"Sin datos aún", selectForAI:"Elegir para predicción IA", formW:"W", formD:"D", formL:"L"
   },
   ru: {
     navHome:"Главная", navPredictions:"Прогнозы", navLive:"В прямом эфире", navStats:"Статистика", navTools:"Инструменты", navCommunity:"Сообщество",
@@ -2080,7 +2102,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коэффициент", calcReturn:"Общая выплата", calcProfit:"Прибыль", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Все", leaguesLoading:"Загрузка лиг...", noLiveLeagues:"Нет матчей в эфире", visitsTitle:"Посещения", totalVisits:"Всего посещений", proAccounts:"PRO аккаунты", byCountry:"По странам", visitsLoading:"Загрузка...", noVisits:"Пока нет данных", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Все", leaguesLoading:"Загрузка лиг...", noLiveLeagues:"Нет матчей в эфире", visitsTitle:"Посещения", totalVisits:"Всего посещений", proAccounts:"PRO аккаунты", byCountry:"По странам", visitsLoading:"Загрузка...", noVisits:"Пока нет данных", selectForAI:"Выбрать для AI прогноза", formW:"W", formD:"D", formL:"L"
   },
   fr: {
     navHome:"Accueil", navPredictions:"Pronostics", navLive:"En direct", navStats:"Statistiques", navTools:"Outils", navCommunity:"Communauté",
@@ -2102,7 +2124,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Mise", calcOdds:"Cote", calcReturn:"Retour total", calcProfit:"Gain", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Toutes", leaguesLoading:"Chargement des ligues...", noLiveLeagues:"Aucun match en direct", visitsTitle:"Visites", totalVisits:"Visites totales", proAccounts:"Comptes PRO", byCountry:"Par pays", visitsLoading:"Chargement...", noVisits:"Pas encore de données", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Toutes", leaguesLoading:"Chargement des ligues...", noLiveLeagues:"Aucun match en direct", visitsTitle:"Visites", totalVisits:"Visites totales", proAccounts:"Comptes PRO", byCountry:"Par pays", visitsLoading:"Chargement...", noVisits:"Pas encore de données", selectForAI:"Choisir pour prédiction IA", formW:"W", formD:"D", formL:"L"
   },
   de: {
     navHome:"Start", navPredictions:"Tipps", navLive:"Live", navStats:"Statistik", navTools:"Tools", navCommunity:"Community",
@@ -2124,7 +2146,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Einsatz", calcOdds:"Quote", calcReturn:"Gesamtauszahlung", calcProfit:"Gewinn", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Alle", leaguesLoading:"Lade Ligen...", noLiveLeagues:"Keine Live-Spiele", visitsTitle:"Besucher", totalVisits:"Besuche gesamt", proAccounts:"PRO-Konten", byCountry:"Nach Land", visitsLoading:"Lädt...", noVisits:"Noch keine Daten", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Alle", leaguesLoading:"Lade Ligen...", noLiveLeagues:"Keine Live-Spiele", visitsTitle:"Besucher", totalVisits:"Besuche gesamt", proAccounts:"PRO-Konten", byCountry:"Nach Land", visitsLoading:"Lädt...", noVisits:"Noch keine Daten", selectForAI:"Für KI-Prognose wählen", formW:"W", formD:"D", formL:"L"
   },
   ar: {
     navHome:"الرئيسية", navPredictions:"التوقعات", navLive:"مباشر", navStats:"إحصائيات", navTools:"أدوات", navCommunity:"المجتمع",
@@ -2146,7 +2168,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"الكل", leaguesLoading:"جارٍ تحميل الدوريات...", noLiveLeagues:"لا مباريات مباشرة الآن", visitsTitle:"الزيارات", totalVisits:"إجمالي الزيارات", proAccounts:"حسابات PRO", byCountry:"حسب الدولة", visitsLoading:"جارٍ التحميل...", noVisits:"لا توجد بيانات بعد", formW:"W", formD:"D", formL:"L"
+    allLeagues:"الكل", leaguesLoading:"جارٍ تحميل الدوريات...", noLiveLeagues:"لا مباريات مباشرة الآن", visitsTitle:"الزيارات", totalVisits:"إجمالي الزيارات", proAccounts:"حسابات PRO", byCountry:"حسب الدولة", visitsLoading:"جارٍ التحميل...", noVisits:"لا توجد بيانات بعد", selectForAI:"اختر للتنبؤ بالذكاء الاصطناعي", formW:"W", formD:"D", formL:"L"
   },
   zh: {
     navHome:"首页", navPredictions:"预测", navLive:"直播", navStats:"统计", navTools:"工具", navCommunity:"社区",
@@ -2168,7 +2190,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"全部", leaguesLoading:"正在加载联赛...", noLiveLeagues:"目前没有直播比赛", visitsTitle:"访问量", totalVisits:"总访问", proAccounts:"PRO 账户", byCountry:"按国家", visitsLoading:"加载中...", noVisits:"暂无数据", formW:"W", formD:"D", formL:"L"
+    allLeagues:"全部", leaguesLoading:"正在加载联赛...", noLiveLeagues:"目前没有直播比赛", visitsTitle:"访问量", totalVisits:"总访问", proAccounts:"PRO 账户", byCountry:"按国家", visitsLoading:"加载中...", noVisits:"暂无数据", selectForAI:"选择用于AI预测", formW:"W", formD:"D", formL:"L"
   },
   ko: {
     navHome:"홈", navPredictions:"예측", navLive:"라이브", navStats:"통계", navTools:"도구", navCommunity:"커뮤니티",
@@ -2190,7 +2212,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"전체", leaguesLoading:"리그 불러오는 중...", noLiveLeagues:"현재 라이브 경기 없음", visitsTitle:"방문자", totalVisits:"총 방문", proAccounts:"PRO 계정", byCountry:"국가별", visitsLoading:"불러오는 중...", noVisits:"아직 데이터 없음", formW:"W", formD:"D", formL:"L"
+    allLeagues:"전체", leaguesLoading:"리그 불러오는 중...", noLiveLeagues:"현재 라이브 경기 없음", visitsTitle:"방문자", totalVisits:"총 방문", proAccounts:"PRO 계정", byCountry:"국가별", visitsLoading:"불러오는 중...", noVisits:"아직 데이터 없음", selectForAI:"AI 예측용 선택", formW:"W", formD:"D", formL:"L"
   },
   pt: {
     navHome:"Início", navPredictions:"Previsões", navLive:"Ao vivo", navStats:"Estatísticas", navTools:"Ferramentas", navCommunity:"Comunidade",
@@ -2212,7 +2234,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Aposta", calcOdds:"Odd", calcReturn:"Retorno total", calcProfit:"Lucro", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Todas", leaguesLoading:"Carregando ligas...", noLiveLeagues:"Sem jogos ao vivo agora", visitsTitle:"Visitas", totalVisits:"Visitas totais", proAccounts:"Contas PRO", byCountry:"Por país", visitsLoading:"Carregando...", noVisits:"Ainda sem dados", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Todas", leaguesLoading:"Carregando ligas...", noLiveLeagues:"Sem jogos ao vivo agora", visitsTitle:"Visitas", totalVisits:"Visitas totais", proAccounts:"Contas PRO", byCountry:"Por país", visitsLoading:"Carregando...", noVisits:"Ainda sem dados", selectForAI:"Escolher para previsão IA", formW:"W", formD:"D", formL:"L"
   },
   ro: {
     navHome:"Acasă", navPredictions:"Predicții", navLive:"Live", navStats:"Statistici", navTools:"Instrumente", navCommunity:"Comunitate",
@@ -2234,7 +2256,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Toate", leaguesLoading:"Se încarcă ligile...", noLiveLeagues:"Niciun meci live acum", visitsTitle:"Vizite", totalVisits:"Vizite totale", proAccounts:"Conturi PRO", byCountry:"După țară", visitsLoading:"Se încarcă...", noVisits:"Încă nu există date", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Toate", leaguesLoading:"Se încarcă ligile...", noLiveLeagues:"Niciun meci live acum", visitsTitle:"Vizite", totalVisits:"Vizite totale", proAccounts:"Conturi PRO", byCountry:"După țară", visitsLoading:"Se încarcă...", noVisits:"Încă nu există date", selectForAI:"Alege pentru predicție AI", formW:"W", formD:"D", formL:"L"
   },
   sr: {
     navHome:"Почетна", navPredictions:"Прогнозе", navLive:"Уживо", navStats:"Статистика", navTools:"Алати", navCommunity:"Заједница",
@@ -2256,7 +2278,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Све", leaguesLoading:"Учитавање лига...", noLiveLeagues:"Нема утакмица уживо", visitsTitle:"Посете", totalVisits:"Укупно посета", proAccounts:"PRO налози", byCountry:"По држави", visitsLoading:"Учитавање...", noVisits:"Још нема података", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Све", leaguesLoading:"Учитавање лига...", noLiveLeagues:"Нема утакмица уживо", visitsTitle:"Посете", totalVisits:"Укупно посета", proAccounts:"PRO налози", byCountry:"По држави", visitsLoading:"Учитавање...", noVisits:"Још нема података", selectForAI:"Изабери за AI предвиђање", formW:"W", formD:"D", formL:"L"
   },
   el: {
     navHome:"Αρχική", navPredictions:"Προβλέψεις", navLive:"Ζωντανά", navStats:"Στατιστικά", navTools:"Εργαλεία", navCommunity:"Κοινότητα",
@@ -2278,7 +2300,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Stake", calcOdds:"Odds", calcReturn:"Total return", calcProfit:"Profit", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Όλες", leaguesLoading:"Φόρτωση πρωταθλημάτων...", noLiveLeagues:"Κανένας ζωντανός αγώνας", visitsTitle:"Επισκέψεις", totalVisits:"Συνολικές επισκέψεις", proAccounts:"Λογαριασμοί PRO", byCountry:"Ανά χώρα", visitsLoading:"Φόρτωση...", noVisits:"Δεν υπάρχουν δεδομένα", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Όλες", leaguesLoading:"Φόρτωση πρωταθλημάτων...", noLiveLeagues:"Κανένας ζωντανός αγώνας", visitsTitle:"Επισκέψεις", totalVisits:"Συνολικές επισκέψεις", proAccounts:"Λογαριασμοί PRO", byCountry:"Ανά χώρα", visitsLoading:"Φόρτωση...", noVisits:"Δεν υπάρχουν δεδομένα", selectForAI:"Επιλογή για πρόβλεψη AI", formW:"W", formD:"D", formL:"L"
   },
   it: {
     navHome:"Home", navPredictions:"Pronostici", navLive:"Live", navStats:"Statistiche", navTools:"Strumenti", navCommunity:"Comunità",
@@ -2300,7 +2322,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Puntata", calcOdds:"Quota", calcReturn:"Ritorno totale", calcProfit:"Profitto", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Tutte", leaguesLoading:"Caricamento leghe...", noLiveLeagues:"Nessuna partita dal vivo", visitsTitle:"Visite", totalVisits:"Visite totali", proAccounts:"Account PRO", byCountry:"Per paese", visitsLoading:"Caricamento...", noVisits:"Ancora nessun dato", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Tutte", leaguesLoading:"Caricamento leghe...", noLiveLeagues:"Nessuna partita dal vivo", visitsTitle:"Visite", totalVisits:"Visite totali", proAccounts:"Account PRO", byCountry:"Per paese", visitsLoading:"Caricamento...", noVisits:"Ancora nessun dato", selectForAI:"Seleziona per pronostico IA", formW:"W", formD:"D", formL:"L"
   },
   tr: {
     navHome:"Ana Sayfa", navPredictions:"Tahminler", navLive:"Canlı", navStats:"İstatistikler", navTools:"Araçlar", navCommunity:"Topluluk",
@@ -2322,7 +2344,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Bahis", calcOdds:"Oran", calcReturn:"Toplam getiri", calcProfit:"Kâr", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Tümü", leaguesLoading:"Ligler yükleniyor...", noLiveLeagues:"Şu an canlı maç yok", visitsTitle:"Ziyaretler", totalVisits:"Toplam ziyaret", proAccounts:"PRO hesaplar", byCountry:"Ülkeye göre", visitsLoading:"Yükleniyor...", noVisits:"Henüz veri yok", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Tümü", leaguesLoading:"Ligler yükleniyor...", noLiveLeagues:"Şu an canlı maç yok", visitsTitle:"Ziyaretler", totalVisits:"Toplam ziyaret", proAccounts:"PRO hesaplar", byCountry:"Ülkeye göre", visitsLoading:"Yükleniyor...", noVisits:"Henüz veri yok", selectForAI:"AI Tahmini için seç", formW:"W", formD:"D", formL:"L"
   },
   uk: {
     navHome:"Головна", navPredictions:"Прогнози", navLive:"Наживо", navStats:"Статистика", navTools:"Інструменти", navCommunity:"Спільнота",
@@ -2344,7 +2366,7 @@ const translations = {
     calcDesc:"Calculate the potential return from a bet.", calcStake:"Ставка", calcOdds:"Коефіцієнт", calcReturn:"Загальна виплата", calcProfit:"Прибуток", toolProNote:"Full data is available with a PRO subscription.", toolDesc_ai:"AI predictions based on form, stats and team history.", toolDesc_stats:"Detailed statistics for every team and match.", toolDesc_h2h:"History of head-to-head meetings between two teams.", toolDesc_odds:"Track how the odds move over time.", toolDesc_goals:"Average goals, goals by half and trends.", toolDesc_corners:"Stats for corners, yellow and red cards.", toolDesc_injuries:"Injured players and expected starting lineups.", toolDesc_calc:"Profit calculator.",
     aiIntro:"Enter two teams for an AI analysis based on real data.", aiHomeTeam:"Home", aiAwayTeam:"Away", aiAnalyze:"Analyze", aiLoading:"Analyzing real data...", aiFillBoth:"Enter both teams", aiError:"Analysis error", aiTeamNotFound:"Team not found", aiDraw:"Draw", aiRecommend:"Recommendation", aiConfidence:"confidence", aiExpGoals:"Expected goals", aiOver25:"Over 2.5 goals", aiUnder25:"Under 2.5 goals", aiBtts:"Both teams score", aiForm:"form", aiGoals:"goals", aiH2H:"Head to head", aiDisclaimer:"Prediction based on real form and statistics. Bet responsibly.",
     liveDetailsHint:"Tap for live stats", matchLoading:"Loading match...", matchError:"Loading error", matchLive:"live", statPossession:"Possession", statShotsOn:"Shots on target", statShots:"Total shots", statCorners:"Corners", statFouls:"Fouls", statYellow:"Yellow cards", statRed:"Red cards", matchNoStats:"No stats yet", matchNoEvents:"No events yet", matchTimeline:"Match events", evAssist:"assist", goalText:"GOAL",
-    allLeagues:"Усі", leaguesLoading:"Завантаження ліг...", noLiveLeagues:"Немає матчів наживо", visitsTitle:"Відвідування", totalVisits:"Усього відвідувань", proAccounts:"PRO акаунти", byCountry:"За країною", visitsLoading:"Завантаження...", noVisits:"Поки немає даних", formW:"W", formD:"D", formL:"L"
+    allLeagues:"Усі", leaguesLoading:"Завантаження ліг...", noLiveLeagues:"Немає матчів наживо", visitsTitle:"Відвідування", totalVisits:"Усього відвідувань", proAccounts:"PRO акаунти", byCountry:"За країною", visitsLoading:"Завантаження...", noVisits:"Поки немає даних", selectForAI:"Вибрати для AI прогнозу", formW:"W", formD:"D", formL:"L"
   }
 };
 
@@ -2554,7 +2576,13 @@ function buildMatchCard(m, dict) {
           <div><div class="team-name">${m.away.name}</div></div>
         </div>
       </div>
-      ${m.isLive ? `<div style="text-align:center;font-size:11px;color:var(--green);margin-top:8px">📊 ${dict.liveDetailsHint || 'Натисни за статистика на живо'}</div>` : ''}
+      <div class="match-ai-select" data-ai-home="${escapeHtmlClient(m.home.name)}" data-ai-away="${escapeHtmlClient(m.away.name)}">
+        <label class="ai-check-label">
+          <input type="checkbox" class="ai-check">
+          <span>${dict.selectForAI || 'Избери за AI Прогноза'}</span>
+        </label>
+      </div>
+      ${m.isLive ? `<div style="text-align:center;font-size:11px;color:var(--green);margin-top:6px">📊 ${dict.liveDetailsHint || 'Натисни за статистика на живо'}</div>` : ''}
     </div>`;
 }
 
@@ -3324,7 +3352,36 @@ function escapeHtmlClient(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function openTool(toolKey) {
+// Пази избрания за AI Прогноза мач (само един)
+let selectedAIMatch = null;
+
+// Клик по отметката за AI избор (делегирано)
+document.addEventListener('change', (e) => {
+  const check = e.target.closest('.ai-check');
+  if (!check) return;
+  const wrap = check.closest('.match-ai-select');
+  if (!wrap) return;
+
+  if (check.checked) {
+    // махаме всички други отметки (само един мач)
+    document.querySelectorAll('.ai-check').forEach(c => { if (c !== check) c.checked = false; });
+    selectedAIMatch = {
+      home: wrap.getAttribute('data-ai-home'),
+      away: wrap.getAttribute('data-ai-away')
+    };
+  } else {
+    selectedAIMatch = null;
+  }
+});
+
+// Спираме отметката да отваря модала за статистика на живо
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.match-ai-select')) {
+    e.stopPropagation();
+  }
+}, true);
+
+function openTool(toolKey, preset) {
   const dict = translations[currentLang()];
   const titleKey = { ai:'toolAI', stats:'toolStats', h2h:'toolH2H', odds:'toolOdds', goals:'toolGoals', corners:'toolCorners', injuries:'toolInjuries', calc:'toolCalc' }[toolKey];
   document.getElementById('toolModalIcon').innerHTML = toolIcons[toolKey] || '';
@@ -3333,11 +3390,13 @@ function openTool(toolKey) {
 
   if (toolKey === 'ai') {
     // AI Прогноза - въвеждане на два отбора + анализ
+    const presetHome = preset && preset.home ? preset.home : '';
+    const presetAway = preset && preset.away ? preset.away : '';
     body.innerHTML =
       '<div class="tool-modal-desc">' + (dict.aiIntro || 'Въведи два отбора за AI анализ на база реални данни.') + '</div>' +
       '<div class="calc-row">' +
-        '<div class="calc-field"><label>' + (dict.aiHomeTeam || 'Домакин') + '</label><input type="text" id="aiHome" placeholder="Barcelona"></div>' +
-        '<div class="calc-field"><label>' + (dict.aiAwayTeam || 'Гост') + '</label><input type="text" id="aiAway" placeholder="Real Madrid"></div>' +
+        '<div class="calc-field"><label>' + (dict.aiHomeTeam || 'Домакин') + '</label><input type="text" id="aiHome" placeholder="Barcelona" value="' + escapeHtmlClient(presetHome) + '"></div>' +
+        '<div class="calc-field"><label>' + (dict.aiAwayTeam || 'Гост') + '</label><input type="text" id="aiAway" placeholder="Real Madrid" value="' + escapeHtmlClient(presetAway) + '"></div>' +
       '</div>' +
       '<button class="auth-submit" id="aiAnalyzeBtn">' + (dict.aiAnalyze || 'Анализирай') + '</button>' +
       '<div id="aiResult" style="margin-top:16px"></div>';
@@ -3348,6 +3407,10 @@ function openTool(toolKey) {
     body.querySelector('#aiHome').addEventListener('keydown', e => { if (e.key === 'Enter') runAnalysis(); });
     body.querySelector('#aiAway').addEventListener('keydown', e => { if (e.key === 'Enter') runAnalysis(); });
     toolModal.classList.add('open');
+    // ако и двата отбора са подадени - стартираме анализа автоматично
+    if (presetHome && presetAway) {
+      runAnalysis();
+    }
     return;
   }
 
@@ -3386,7 +3449,14 @@ function openTool(toolKey) {
 }
 
 document.querySelectorAll('.tool-card[data-tool]').forEach(card => {
-  card.addEventListener('click', () => openTool(card.getAttribute('data-tool')));
+  card.addEventListener('click', () => {
+    const toolKey = card.getAttribute('data-tool');
+    if (toolKey === 'ai' && selectedAIMatch) {
+      openTool('ai', selectedAIMatch);
+    } else {
+      openTool(toolKey);
+    }
+  });
 });
 document.getElementById('toolModalClose').addEventListener('click', () => toolModal.classList.remove('open'));
 toolModal.addEventListener('click', (e) => { if (e.target === toolModal) toolModal.classList.remove('open'); });
