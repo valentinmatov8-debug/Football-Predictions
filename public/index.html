@@ -479,7 +479,10 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     width: 100%;
-    max-width: 440px;
+    max-width: 520px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     animation: modalIn 0.2s ease;
   }
@@ -489,6 +492,7 @@
     align-items: center;
     gap: 14px;
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .tool-modal-icon {
     width: 44px; height: 44px;
@@ -501,7 +505,7 @@
   }
   .tool-modal-icon svg { width: 24px; height: 24px; }
   .tool-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 1px; flex: 1; }
-  .tool-modal-body { padding: 20px 24px 24px; }
+  .tool-modal-body { padding: 20px 24px 24px; overflow-y: auto; flex: 1; }
   .tool-modal-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
   .tool-feature {
     display: flex; align-items: flex-start; gap: 10px;
@@ -1448,15 +1452,17 @@
   }
 
   .form-dot {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 700;
     color: white;
+    margin-right: 4px;
+    vertical-align: middle;
   }
 
   .form-dot.w { background: var(--green); color: var(--dark); }
