@@ -1687,15 +1687,15 @@
         <div style="padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
             <span style="font-size:12px;color:var(--muted);" data-i18n="correctThisWeek">Точни тази седмица</span>
-            <span style="font-size:13px;font-weight:700;color:var(--green);">7/9</span>
+            <span id="mpWeek" style="font-size:13px;font-weight:700;color:var(--green);">—</span>
           </div>
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
             <span style="font-size:12px;color:var(--muted);" data-i18n="totalAccuracy">Точност общо</span>
-            <span style="font-size:13px;font-weight:700;">68.4%</span>
+            <span id="mpAccuracy" style="font-size:13px;font-weight:700;">—</span>
           </div>
           <div style="display:flex;justify-content:space-between;">
             <span style="font-size:12px;color:var(--muted);" data-i18n="streak">Серия</span>
-            <span style="font-size:13px;font-weight:700;color:var(--gold);">🔥 <span data-i18n="streakVal">5 поредни</span></span>
+            <span style="font-size:13px;font-weight:700;color:var(--gold);">🔥 <span id="mpStreak">—</span></span>
           </div>
         </div>
       </div>
@@ -1782,6 +1782,8 @@
 
         <!-- Тук се зареждат РЕАЛНИТЕ мачове от сървъра -->
         <div id="liveMatchesContainer"></div>
+        <!-- СИГУРНИ ЗАЛОЗИ (таб Сигурни) -->
+        <div id="sureBetsContainer" style="display:none;"></div>
         <div id="liveLoading" class="live-loading" style="display:none;" data-i18n="loading">Зареждане на мачове на живо…</div>
         <div id="liveError" class="live-error" style="display:none;"></div>
 
@@ -2124,7 +2126,7 @@ const translations = {
   bg: {
     navHome:"Начало", navPredictions:"Прогнози", navLive:"На живо", navStats:"Статистики", navTools:"Инструменти", navCommunity:"Общност",
     login:"Вход", proAccess:"PRO достъп",
-    leagues:"Лиги", myPredictions:"Моите прогнози", correctThisWeek:"Точни тази седмица", totalAccuracy:"Точност общо", streak:"Серия", streakVal:"5 поредни",
+    leagues:"Лиги", myPredictions:"Моите прогнози", correctThisWeek:"Точни тази седмица", totalAccuracy:"Точност общо", streak:"Серия", streakVal:"5 поредни", inARow:"поредни", confidence:"увереност", aiPick:"AI препоръка", draw:"Равенство", loadingSure:"Анализирам мачове за сигурни залози…", noSureBets:"В момента няма мачове с висока увереност. Провери пак по-късно.",
     tools:"Инструменти", toolAI:"AI Прогноза", toolStats:"Статистики", toolH2H:"Директни срещи", toolOdds:"Движение на коефициенти", toolGoals:"Голова статистика", toolCorners:"Корнери & карти", toolInjuries:"Контузии & наредба", toolCalc:"Калкулатор печалба",
     tabLive:"На живо (3)", tabToday:"Днес (14)", tabTomorrow:"Утре (22)", tabTop:"Топ избори", tabSafe:"Сигурни",
     liveMatches:"Срещи на живо", seeAll:"Виж всички →",
@@ -2148,7 +2150,7 @@ const translations = {
   en: {
     navHome:"Home", navPredictions:"Predictions", navLive:"Live", navStats:"Stats", navTools:"Tools", navCommunity:"Community",
     login:"Log in", proAccess:"PRO access",
-    leagues:"Leagues", myPredictions:"My predictions", correctThisWeek:"Correct this week", totalAccuracy:"Total accuracy", streak:"Streak", streakVal:"5 in a row",
+    leagues:"Leagues", myPredictions:"My predictions", correctThisWeek:"Correct this week", totalAccuracy:"Total accuracy", streak:"Streak", streakVal:"5 in a row", inARow:"in a row", confidence:"confidence", aiPick:"AI pick", draw:"Draw", loadingSure:"Analyzing matches for safe bets…", noSureBets:"No high-confidence matches right now. Check back later.",
     tools:"Tools", toolAI:"AI Prediction", toolStats:"Stats", toolH2H:"Head-to-head", toolOdds:"Odds movement", toolGoals:"Goal stats", toolCorners:"Corners & cards", toolInjuries:"Injuries & lineup", toolCalc:"Profit calculator",
     tabLive:"Live (3)", tabToday:"Today (14)", tabTomorrow:"Tomorrow (22)", tabTop:"Top picks", tabSafe:"Safe",
     liveMatches:"Live matches", seeAll:"See all \u2192",
@@ -2172,7 +2174,7 @@ const translations = {
   no: {
     navHome:"Hjem", navPredictions:"Tips", navLive:"Direkte", navStats:"Statistikk", navTools:"Verktøy", navCommunity:"Fellesskap",
     login:"Logg inn", proAccess:"PRO-tilgang",
-    leagues:"Ligaer", myPredictions:"Mine tips", correctThisWeek:"Riktige denne uken", totalAccuracy:"Total nøyaktighet", streak:"Rekke", streakVal:"5 på rad",
+    leagues:"Ligaer", myPredictions:"Mine tips", correctThisWeek:"Riktige denne uken", totalAccuracy:"Total nøyaktighet", streak:"Rekke", streakVal:"5 på rad", inARow:"på rad", confidence:"sikkerhet", aiPick:"AI-tips", draw:"Uavgjort", loadingSure:"Analyserer kamper for sikre spill…", noSureBets:"Ingen kamper med høy sikkerhet nå. Sjekk igjen senere.",
     tools:"Verktøy", toolAI:"AI-tips", toolStats:"Statistikk", toolH2H:"Innbyrdes oppgjør", toolOdds:"Oddsbevegelse", toolGoals:"Målstatistikk", toolCorners:"Hjørner & kort", toolInjuries:"Skader & lag", toolCalc:"Gevinstkalkulator",
     tabLive:"Direkte (3)", tabToday:"I dag (14)", tabTomorrow:"I morgen (22)", tabTop:"Topptips", tabSafe:"Sikre",
     liveMatches:"Direktekamper", seeAll:"Se alle →",
@@ -2196,7 +2198,7 @@ const translations = {
   es: {
     navHome:"Inicio", navPredictions:"Pronósticos", navLive:"En vivo", navStats:"Estadísticas", navTools:"Herramientas", navCommunity:"Comunidad",
     login:"Entrar", proAccess:"Acceso PRO",
-    leagues:"Ligas", myPredictions:"Mis pronósticos", correctThisWeek:"Aciertos esta semana", totalAccuracy:"Precisión total", streak:"Racha", streakVal:"5 seguidos",
+    leagues:"Ligas", myPredictions:"Mis pronósticos", correctThisWeek:"Aciertos esta semana", totalAccuracy:"Precisión total", streak:"Racha", streakVal:"5 seguidos", inARow:"seguidos", confidence:"confianza", aiPick:"Pronóstico IA", draw:"Empate", loadingSure:"Analizando partidos para apuestas seguras…", noSureBets:"No hay partidos de alta confianza ahora. Vuelve más tarde.",
     tools:"Herramientas", toolAI:"Pronóstico IA", toolStats:"Estadísticas", toolH2H:"Cara a cara", toolOdds:"Movimiento de cuotas", toolGoals:"Estadística de goles", toolCorners:"Córners y tarjetas", toolInjuries:"Lesiones y alineación", toolCalc:"Calculadora de ganancias",
     tabLive:"En vivo (3)", tabToday:"Hoy (14)", tabTomorrow:"Mañana (22)", tabTop:"Mejores", tabSafe:"Seguros",
     liveMatches:"Partidos en vivo", seeAll:"Ver todos →",
@@ -2220,7 +2222,7 @@ const translations = {
   ru: {
     navHome:"Главная", navPredictions:"Прогнозы", navLive:"В прямом эфире", navStats:"Статистика", navTools:"Инструменты", navCommunity:"Сообщество",
     login:"Вход", proAccess:"PRO доступ",
-    leagues:"Лиги", myPredictions:"Мои прогнозы", correctThisWeek:"Верные на этой неделе", totalAccuracy:"Общая точность", streak:"Серия", streakVal:"5 подряд",
+    leagues:"Лиги", myPredictions:"Мои прогнозы", correctThisWeek:"Верные на этой неделе", totalAccuracy:"Общая точность", streak:"Серия", streakVal:"5 подряд", inARow:"подряд", confidence:"уверенность", aiPick:"Выбор ИИ", draw:"Ничья", loadingSure:"Анализирую матчи для надёжных ставок…", noSureBets:"Сейчас нет матчей с высокой уверенностью. Загляните позже.",
     tools:"Инструменты", toolAI:"ИИ прогноз", toolStats:"Статистика", toolH2H:"Очные встречи", toolOdds:"Движение коэффициентов", toolGoals:"Статистика голов", toolCorners:"Угловые и карточки", toolInjuries:"Травмы и состав", toolCalc:"Калькулятор выигрыша",
     tabLive:"В эфире (3)", tabToday:"Сегодня (14)", tabTomorrow:"Завтра (22)", tabTop:"Лучшие", tabSafe:"Надёжные",
     liveMatches:"Матчи в эфире", seeAll:"Все матчи →",
@@ -2244,7 +2246,7 @@ const translations = {
   fr: {
     navHome:"Accueil", navPredictions:"Pronostics", navLive:"En direct", navStats:"Statistiques", navTools:"Outils", navCommunity:"Communauté",
     login:"Connexion", proAccess:"Accès PRO",
-    leagues:"Ligues", myPredictions:"Mes pronostics", correctThisWeek:"Corrects cette semaine", totalAccuracy:"Précision totale", streak:"Série", streakVal:"5 d'affilée",
+    leagues:"Ligues", myPredictions:"Mes pronostics", correctThisWeek:"Corrects cette semaine", totalAccuracy:"Précision totale", streak:"Série", streakVal:"5 d'affilée", inARow:"de suite", confidence:"confiance", aiPick:"Choix IA", draw:"Nul", loadingSure:"Analyse des matchs pour paris sûrs…", noSureBets:"Aucun match à forte confiance pour le moment. Revenez plus tard.",
     tools:"Outils", toolAI:"Pronostic IA", toolStats:"Statistiques", toolH2H:"Confrontations", toolOdds:"Évolution des cotes", toolGoals:"Statistiques de buts", toolCorners:"Corners & cartons", toolInjuries:"Blessures & compo", toolCalc:"Calculateur de gains",
     tabLive:"En direct (3)", tabToday:"Aujourd'hui (14)", tabTomorrow:"Demain (22)", tabTop:"Meilleurs", tabSafe:"Sûrs",
     liveMatches:"Matchs en direct", seeAll:"Voir tout →",
@@ -2268,7 +2270,7 @@ const translations = {
   de: {
     navHome:"Start", navPredictions:"Tipps", navLive:"Live", navStats:"Statistik", navTools:"Tools", navCommunity:"Community",
     login:"Anmelden", proAccess:"PRO-Zugang",
-    leagues:"Ligen", myPredictions:"Meine Tipps", correctThisWeek:"Richtig diese Woche", totalAccuracy:"Gesamtgenauigkeit", streak:"Serie", streakVal:"5 in Folge",
+    leagues:"Ligen", myPredictions:"Meine Tipps", correctThisWeek:"Richtig diese Woche", totalAccuracy:"Gesamtgenauigkeit", streak:"Serie", streakVal:"5 in Folge", inARow:"in Folge", confidence:"Sicherheit", aiPick:"KI-Tipp", draw:"Unentschieden", loadingSure:"Analysiere Spiele für sichere Wetten…", noSureBets:"Derzeit keine Spiele mit hoher Sicherheit. Schau später vorbei.",
     tools:"Tools", toolAI:"KI-Tipp", toolStats:"Statistik", toolH2H:"Direkte Duelle", toolOdds:"Quotenverlauf", toolGoals:"Torstatistik", toolCorners:"Ecken & Karten", toolInjuries:"Verletzungen & Aufstellung", toolCalc:"Gewinnrechner",
     tabLive:"Live (3)", tabToday:"Heute (14)", tabTomorrow:"Morgen (22)", tabTop:"Top-Tipps", tabSafe:"Sicher",
     liveMatches:"Live-Spiele", seeAll:"Alle ansehen →",
@@ -2292,7 +2294,7 @@ const translations = {
   ar: {
     navHome:"الرئيسية", navPredictions:"التوقعات", navLive:"مباشر", navStats:"إحصائيات", navTools:"أدوات", navCommunity:"المجتمع",
     login:"تسجيل الدخول", proAccess:"وصول PRO",
-    leagues:"الدوريات", myPredictions:"توقعاتي", correctThisWeek:"الصحيحة هذا الأسبوع", totalAccuracy:"الدقة الإجمالية", streak:"سلسلة", streakVal:"5 متتالية",
+    leagues:"الدوريات", myPredictions:"توقعاتي", correctThisWeek:"الصحيحة هذا الأسبوع", totalAccuracy:"الدقة الإجمالية", streak:"سلسلة", streakVal:"5 متتالية", inARow:"متتالية", confidence:"ثقة", aiPick:"اختيار الذكاء", draw:"تعادل", loadingSure:"تحليل المباريات للرهانات الآمنة…", noSureBets:"لا توجد مباريات عالية الثقة الآن. تحقق لاحقاً.",
     tools:"أدوات", toolAI:"توقع الذكاء الاصطناعي", toolStats:"إحصائيات", toolH2H:"مواجهات مباشرة", toolOdds:"حركة الاحتمالات", toolGoals:"إحصائيات الأهداف", toolCorners:"الركنيات والبطاقات", toolInjuries:"الإصابات والتشكيلة", toolCalc:"حاسبة الأرباح",
     tabLive:"مباشر (3)", tabToday:"اليوم (14)", tabTomorrow:"غداً (22)", tabTop:"أفضل الاختيارات", tabSafe:"الآمنة",
     liveMatches:"المباريات المباشرة", seeAll:"عرض الكل \u2190",
@@ -2316,7 +2318,7 @@ const translations = {
   zh: {
     navHome:"首页", navPredictions:"预测", navLive:"直播", navStats:"统计", navTools:"工具", navCommunity:"社区",
     login:"登录", proAccess:"PRO 访问",
-    leagues:"联赛", myPredictions:"我的预测", correctThisWeek:"本周正确", totalAccuracy:"总准确率", streak:"连胜", streakVal:"连续5次",
+    leagues:"联赛", myPredictions:"我的预测", correctThisWeek:"本周正确", totalAccuracy:"总准确率", streak:"连胜", streakVal:"连续5次", inARow:"连胜", confidence:"信心", aiPick:"AI推荐", draw:"平局", loadingSure:"正在分析比赛以寻找稳妥投注…", noSureBets:"目前没有高信心比赛。请稍后再查看。",
     tools:"工具", toolAI:"AI 预测", toolStats:"统计", toolH2H:"交锋记录", toolOdds:"赔率变化", toolGoals:"进球统计", toolCorners:"角球和牌", toolInjuries:"伤病和阵容", toolCalc:"盈利计算器",
     tabLive:"直播 (3)", tabToday:"今天 (14)", tabTomorrow:"明天 (22)", tabTop:"热门精选", tabSafe:"稳妥",
     liveMatches:"直播比赛", seeAll:"查看全部 \u2192",
@@ -2340,7 +2342,7 @@ const translations = {
   ko: {
     navHome:"홈", navPredictions:"예측", navLive:"라이브", navStats:"통계", navTools:"도구", navCommunity:"커뮤니티",
     login:"로그인", proAccess:"PRO 이용",
-    leagues:"리그", myPredictions:"내 예측", correctThisWeek:"이번 주 적중", totalAccuracy:"전체 정확도", streak:"연승", streakVal:"5연속",
+    leagues:"리그", myPredictions:"내 예측", correctThisWeek:"이번 주 적중", totalAccuracy:"전체 정확도", streak:"연승", streakVal:"5연속", inARow:"연속", confidence:"신뢰도", aiPick:"AI 추천", draw:"무승부", loadingSure:"안전한 베팅을 위해 경기 분석 중…", noSureBets:"현재 높은 신뢰도의 경기가 없습니다. 나중에 다시 확인하세요.",
     tools:"도구", toolAI:"AI 예측", toolStats:"통계", toolH2H:"상대 전적", toolOdds:"배당 변동", toolGoals:"득점 통계", toolCorners:"코너킥 & 카드", toolInjuries:"부상 & 라인업", toolCalc:"수익 계산기",
     tabLive:"라이브 (3)", tabToday:"오늘 (14)", tabTomorrow:"내일 (22)", tabTop:"인기 추천", tabSafe:"안전",
     liveMatches:"라이브 경기", seeAll:"전체 보기 \u2192",
@@ -2364,7 +2366,7 @@ const translations = {
   pt: {
     navHome:"Início", navPredictions:"Previsões", navLive:"Ao vivo", navStats:"Estatísticas", navTools:"Ferramentas", navCommunity:"Comunidade",
     login:"Entrar", proAccess:"Acesso PRO",
-    leagues:"Ligas", myPredictions:"As minhas previsões", correctThisWeek:"Corretas esta semana", totalAccuracy:"Precisão total", streak:"Sequência", streakVal:"5 seguidas",
+    leagues:"Ligas", myPredictions:"As minhas previsões", correctThisWeek:"Corretas esta semana", totalAccuracy:"Precisão total", streak:"Sequência", streakVal:"5 seguidas", inARow:"seguidas", confidence:"confiança", aiPick:"Escolha IA", draw:"Empate", loadingSure:"Analisando jogos para apostas seguras…", noSureBets:"Nenhum jogo de alta confiança agora. Volte mais tarde.",
     tools:"Ferramentas", toolAI:"Previsão IA", toolStats:"Estatísticas", toolH2H:"Confrontos diretos", toolOdds:"Movimento de odds", toolGoals:"Estatísticas de golos", toolCorners:"Cantos & cartões", toolInjuries:"Lesões & escalação", toolCalc:"Calculadora de lucros",
     tabLive:"Ao vivo (3)", tabToday:"Hoje (14)", tabTomorrow:"Amanhã (22)", tabTop:"Melhores", tabSafe:"Seguras",
     liveMatches:"Jogos ao vivo", seeAll:"Ver todos \u2192",
@@ -2388,7 +2390,7 @@ const translations = {
   ro: {
     navHome:"Acasă", navPredictions:"Predicții", navLive:"Live", navStats:"Statistici", navTools:"Instrumente", navCommunity:"Comunitate",
     login:"Autentificare", proAccess:"Acces PRO",
-    leagues:"Ligi", myPredictions:"Predicțiile mele", correctThisWeek:"Corecte săptămâna asta", totalAccuracy:"Acuratețe totală", streak:"Serie", streakVal:"5 la rând",
+    leagues:"Ligi", myPredictions:"Predicțiile mele", correctThisWeek:"Corecte săptămâna asta", totalAccuracy:"Acuratețe totală", streak:"Serie", streakVal:"5 la rând", inARow:"la rând", confidence:"încredere", aiPick:"Alegere IA", draw:"Egal", loadingSure:"Analizez meciuri pentru pariuri sigure…", noSureBets:"Niciun meci cu încredere mare acum. Revino mai târziu.",
     tools:"Instrumente", toolAI:"Predicție AI", toolStats:"Statistici", toolH2H:"Întâlniri directe", toolOdds:"Mișcarea cotelor", toolGoals:"Statistici goluri", toolCorners:"Cornere & cartonașe", toolInjuries:"Accidentări & echipă", toolCalc:"Calculator câștig",
     tabLive:"Live (3)", tabToday:"Azi (14)", tabTomorrow:"Mâine (22)", tabTop:"Top alegeri", tabSafe:"Sigure",
     liveMatches:"Meciuri live", seeAll:"Vezi toate \u2192",
@@ -2412,7 +2414,7 @@ const translations = {
   sr: {
     navHome:"Почетна", navPredictions:"Прогнозе", navLive:"Уживо", navStats:"Статистика", navTools:"Алати", navCommunity:"Заједница",
     login:"Пријава", proAccess:"PRO приступ",
-    leagues:"Лиге", myPredictions:"Моје прогнозе", correctThisWeek:"Тачне ове недеље", totalAccuracy:"Укупна тачност", streak:"Низ", streakVal:"5 заредом",
+    leagues:"Лиге", myPredictions:"Моје прогнозе", correctThisWeek:"Тачне ове недеље", totalAccuracy:"Укупна тачност", streak:"Низ", streakVal:"5 заредом", inARow:"заредом", confidence:"сигурност", aiPick:"AI избор", draw:"Нерешено", loadingSure:"Анализирам мечеве за сигурне опкладе…", noSureBets:"Тренутно нема мечева са високом сигурношћу. Проверите касније.",
     tools:"Алати", toolAI:"AI прогноза", toolStats:"Статистика", toolH2H:"Међусобни сусрети", toolOdds:"Кретање квота", toolGoals:"Статистика голова", toolCorners:"Корнери и картони", toolInjuries:"Повреде и састав", toolCalc:"Калкулатор добитка",
     tabLive:"Уживо (3)", tabToday:"Данас (14)", tabTomorrow:"Сутра (22)", tabTop:"Топ избори", tabSafe:"Сигурне",
     liveMatches:"Мечеви уживо", seeAll:"Прикажи све \u2192",
@@ -2436,7 +2438,7 @@ const translations = {
   el: {
     navHome:"Αρχική", navPredictions:"Προβλέψεις", navLive:"Ζωντανά", navStats:"Στατιστικά", navTools:"Εργαλεία", navCommunity:"Κοινότητα",
     login:"Σύνδεση", proAccess:"Πρόσβαση PRO",
-    leagues:"Πρωταθλήματα", myPredictions:"Οι προβλέψεις μου", correctThisWeek:"Σωστές αυτή την εβδομάδα", totalAccuracy:"Συνολική ακρίβεια", streak:"Σερί", streakVal:"5 στη σειρά",
+    leagues:"Πρωταθλήματα", myPredictions:"Οι προβλέψεις μου", correctThisWeek:"Σωστές αυτή την εβδομάδα", totalAccuracy:"Συνολική ακρίβεια", streak:"Σερί", streakVal:"5 στη σειρά", inARow:"στη σειρά", confidence:"βεβαιότητα", aiPick:"Επιλογή AI", draw:"Ισοπαλία", loadingSure:"Ανάλυση αγώνων για σίγουρα στοιχήματα…", noSureBets:"Δεν υπάρχουν αγώνες υψηλής βεβαιότητας τώρα. Ελέγξτε αργότερα.",
     tools:"Εργαλεία", toolAI:"Πρόβλεψη AI", toolStats:"Στατιστικά", toolH2H:"Αναμετρήσεις", toolOdds:"Κίνηση αποδόσεων", toolGoals:"Στατιστικά γκολ", toolCorners:"Κόρνερ & κάρτες", toolInjuries:"Τραυματισμοί & σύνθεση", toolCalc:"Υπολογιστής κέρδους",
     tabLive:"Ζωντανά (3)", tabToday:"Σήμερα (14)", tabTomorrow:"Αύριο (22)", tabTop:"Κορυφαίες", tabSafe:"Ασφαλείς",
     liveMatches:"Ζωντανοί αγώνες", seeAll:"Δείτε όλα \u2192",
@@ -2460,7 +2462,7 @@ const translations = {
   it: {
     navHome:"Home", navPredictions:"Pronostici", navLive:"Live", navStats:"Statistiche", navTools:"Strumenti", navCommunity:"Comunità",
     login:"Accedi", proAccess:"Accesso PRO",
-    leagues:"Campionati", myPredictions:"I miei pronostici", correctThisWeek:"Corretti questa settimana", totalAccuracy:"Precisione totale", streak:"Serie", streakVal:"5 di fila",
+    leagues:"Campionati", myPredictions:"I miei pronostici", correctThisWeek:"Corretti questa settimana", totalAccuracy:"Precisione totale", streak:"Serie", streakVal:"5 di fila", inARow:"di fila", confidence:"fiducia", aiPick:"Scelta IA", draw:"Pareggio", loadingSure:"Analizzo le partite per scommesse sicure…", noSureBets:"Nessuna partita ad alta affidabilità ora. Ricontrolla più tardi.",
     tools:"Strumenti", toolAI:"Pronostico IA", toolStats:"Statistiche", toolH2H:"Scontri diretti", toolOdds:"Movimento quote", toolGoals:"Statistiche gol", toolCorners:"Corner & cartellini", toolInjuries:"Infortuni & formazione", toolCalc:"Calcolatore vincite",
     tabLive:"Live (3)", tabToday:"Oggi (14)", tabTomorrow:"Domani (22)", tabTop:"Migliori", tabSafe:"Sicure",
     liveMatches:"Partite live", seeAll:"Vedi tutte \u2192",
@@ -2484,7 +2486,7 @@ const translations = {
   tr: {
     navHome:"Ana Sayfa", navPredictions:"Tahminler", navLive:"Canlı", navStats:"İstatistikler", navTools:"Araçlar", navCommunity:"Topluluk",
     login:"Giriş", proAccess:"PRO erişim",
-    leagues:"Ligler", myPredictions:"Tahminlerim", correctThisWeek:"Bu hafta doğru", totalAccuracy:"Toplam isabet", streak:"Seri", streakVal:"5 üst üste",
+    leagues:"Ligler", myPredictions:"Tahminlerim", correctThisWeek:"Bu hafta doğru", totalAccuracy:"Toplam isabet", streak:"Seri", streakVal:"5 üst üste", inARow:"üst üste", confidence:"güven", aiPick:"AI seçimi", draw:"Beraberlik", loadingSure:"Güvenli bahisler için maçlar analiz ediliyor…", noSureBets:"Şu anda yüksek güvenli maç yok. Daha sonra tekrar kontrol edin.",
     tools:"Araçlar", toolAI:"AI Tahmini", toolStats:"İstatistikler", toolH2H:"Karşılıklı maçlar", toolOdds:"Oran hareketi", toolGoals:"Gol istatistikleri", toolCorners:"Kornerler & kartlar", toolInjuries:"Sakatlıklar & kadro", toolCalc:"Kazanç hesaplayıcı",
     tabLive:"Canlı (3)", tabToday:"Bugün (14)", tabTomorrow:"Yarın (22)", tabTop:"En iyiler", tabSafe:"Güvenli",
     liveMatches:"Canlı maçlar", seeAll:"Tümünü gör \u2192",
@@ -2508,7 +2510,7 @@ const translations = {
   uk: {
     navHome:"Головна", navPredictions:"Прогнози", navLive:"Наживо", navStats:"Статистика", navTools:"Інструменти", navCommunity:"Спільнота",
     login:"Увійти", proAccess:"PRO доступ",
-    leagues:"Ліги", myPredictions:"Мої прогнози", correctThisWeek:"Правильні цього тижня", totalAccuracy:"Загальна точність", streak:"Серія", streakVal:"5 поспіль",
+    leagues:"Ліги", myPredictions:"Мої прогнози", correctThisWeek:"Правильні цього тижня", totalAccuracy:"Загальна точність", streak:"Серія", streakVal:"5 поспіль", inARow:"поспіль", confidence:"впевненість", aiPick:"Вибір ШІ", draw:"Нічия", loadingSure:"Аналізую матчі для надійних ставок…", noSureBets:"Зараз немає матчів з високою впевненістю. Перевірте пізніше.",
     tools:"Інструменти", toolAI:"AI прогноз", toolStats:"Статистика", toolH2H:"Особисті зустрічі", toolOdds:"Рух коефіцієнтів", toolGoals:"Статистика голів", toolCorners:"Кутові та картки", toolInjuries:"Травми та склад", toolCalc:"Калькулятор виграшу",
     tabLive:"Наживо (3)", tabToday:"Сьогодні (14)", tabTomorrow:"Завтра (22)", tabTop:"Топ вибори", tabSafe:"Надійні",
     liveMatches:"Матчі наживо", seeAll:"Дивитися всі \u2192",
@@ -3170,11 +3172,94 @@ setInterval(loadLeagues, 45 * 1000);
 loadVisits();
 setInterval(loadVisits, 60 * 1000);
 
-// Горната лента (тикер) - реални мачове, опресняване на всеки 60 сек
-loadTicker();
-setInterval(loadTicker, 60 * 1000);
+// ===== МОИТЕ ПРОГНОЗИ (реална статистика на AI) =====
+async function loadMyPredictions() {
+  try {
+    const res = await fetch('/api/my-predictions');
+    if (!res.ok) return;
+    const d = await res.json();
+    const dict = translations[currentLang()];
+    const wk = document.getElementById('mpWeek');
+    const acc = document.getElementById('mpAccuracy');
+    const st = document.getElementById('mpStreak');
+    if (wk) wk.textContent = d.weekCorrect + '/' + d.weekTotal;
+    if (acc) acc.textContent = (d.totalChecked > 0 ? d.accuracy + '%' : '—');
+    if (st) {
+      const word = (dict.inARow || 'поредни');
+      st.textContent = d.streak > 0 ? (d.streak + ' ' + word) : '0';
+    }
+  } catch (e) { /* тихо */ }
+}
+loadMyPredictions();
+setInterval(loadMyPredictions, 120 * 1000);
 
-// ===== КРАЙ РЕАЛНИ МАЧОВЕ =====
+// ===== СИГУРНИ ЗАЛОЗИ =====
+function buildSureBetCard(b, dict) {
+  const flag = b.flag ? '<img src="'+b.flag+'" style="width:18px;height:13px;border-radius:2px;vertical-align:middle;margin-right:6px;">' : '';
+  const liveBadge = b.isLive ? '<span class="live-badge" style="margin-left:8px;">'+(dict.liveBadge||'НА ЖИВО')+'</span>' : '';
+  const pickLabel = b.pickType === '1' ? b.home : (b.pickType === '2' ? b.away : (dict.draw || 'Равенство'));
+  const homeLogo = b.homeLogo ? '<img src="'+b.homeLogo+'" style="width:26px;height:26px;object-fit:contain;">' : '';
+  const awayLogo = b.awayLogo ? '<img src="'+b.awayLogo+'" style="width:26px;height:26px;object-fit:contain;">' : '';
+  return '<div class="match-card' + (b.isLive ? ' live' : '') + '">' +
+    '<div class="match-meta"><div class="match-league">' + flag + escapeHtmlClient(b.league || '') + liveBadge + '</div>' +
+      '<div style="background:linear-gradient(135deg,#ffd32a,#ffae00);color:#000;font-weight:800;font-size:12px;padding:3px 10px;border-radius:20px;">' + b.confidence + '% ' + (dict.confidence || 'увереност') + '</div></div>' +
+    '<div class="match-teams" style="display:flex;align-items:center;justify-content:space-between;margin:10px 0;">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex:1;">' + homeLogo + '<span class="team-name">' + escapeHtmlClient(b.home) + '</span></div>' +
+      '<div style="font-size:13px;color:var(--muted);padding:0 10px;">vs</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;"><span class="team-name">' + escapeHtmlClient(b.away) + '</span>' + awayLogo + '</div>' +
+    '</div>' +
+    '<div style="background:rgba(0,255,135,0.08);border:1.5px solid var(--gold);border-radius:10px;padding:10px 12px;text-align:center;">' +
+      '<span style="font-size:12px;color:var(--muted);">' + (dict.aiPick || 'AI препоръка') + ': </span>' +
+      '<span style="font-size:14px;font-weight:800;color:var(--green);">' + escapeHtmlClient(pickLabel) + '</span>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px;">1: ' + b.homePct + '% · X: ' + b.drawPct + '% · 2: ' + b.awayPct + '%</div>' +
+    '</div></div>';
+}
+
+async function loadSureBets() {
+  const dict = translations[currentLang()];
+  const container = document.getElementById('sureBetsContainer');
+  const loading = document.getElementById('liveLoading');
+  if (!container) return;
+  container.innerHTML = '';
+  loading.style.display = 'block';
+  loading.textContent = dict.loadingSure || 'Анализирам мачове за сигурни залози…';
+  try {
+    const res = await fetch('/api/sure-bets');
+    const d = await res.json();
+    loading.style.display = 'none';
+    if (d.bets && d.bets.length > 0) {
+      container.innerHTML = d.bets.map(b => buildSureBetCard(b, dict)).join('');
+    } else {
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">' + (dict.noSureBets || 'В момента няма мачове с висока увереност. Провери пак по-късно.') + '</div>';
+    }
+  } catch (e) {
+    loading.style.display = 'none';
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">' + (dict.noSureBets || 'В момента няма мачове с висока увереност.') + '</div>';
+  }
+}
+
+// ===== ТАБОВЕ (превключване) =====
+document.querySelectorAll('.tabs .tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const which = tab.getAttribute('data-tab');
+    const liveC = document.getElementById('liveMatchesContainer');
+    const sureC = document.getElementById('sureBetsContainer');
+    const demo = document.getElementById('demoMatches');
+    if (which === 'safe') {
+      if (liveC) liveC.style.display = 'none';
+      if (demo) demo.style.display = 'none';
+      if (sureC) sureC.style.display = 'block';
+      loadSureBets();
+    } else {
+      if (sureC) sureC.style.display = 'none';
+      if (liveC) liveC.style.display = 'block';
+      loadLiveMatches();
+    }
+  });
+});
+
 
 // Създава/обновява баджа "на живо" или "демо данни" според текущия език
 function setDataBadge(type) {
