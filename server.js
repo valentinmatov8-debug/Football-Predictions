@@ -624,6 +624,146 @@ async function handleApi(req, res, route, method) {
     }
 
     // ---------- AI ПРОГНОЗА (безплатна формула) ----------
+    // ---------- ДИРЕКТНИ СРЕЩИ (H2H) ----------
+    if (route === '/api/h2h' && method === 'POST') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const body = await readBody(req);
+      const homeName = (body.home || '').trim();
+      const awayName = (body.away || '').trim();
+      if (!homeName || !awayName) return sendJSON(res, 400, { error: 'missing_teams' });
+
+      const cacheKey = 'h2h:' + homeName.toLowerCase() + ':' + awayName.toLowerCase();
+      const cached = getCached(cacheKey, 600000);
+      if (cached) return sendJSON(res, 200, cached);
+
+      const team1 = await findTeam(homeName);
+      if (!team1) return sendJSON(res, 404, { error: 'home_not_found', name: homeName });
+      const team2 = await findTeam(awayName);
+      if (!team2) return sendJSON(res, 404, { error: 'away_not_found', name: awayName });
+
+      const h2h = await getH2H(team1.id, team2.id, 10);
+      const result = {
+        team1: { id: team1.id, name: team1.name, logo: team1.logo },
+        team2: { id: team2.id, name: team2.name, logo: team2.logo },
+        h2h: h2h
+      };
+      setCached(cacheKey, result);
+      return sendJSON(res, 200, result);
+    }
+
+    // ---------- ГОЛОВА СТАТИСТИКА ----------
+    if (route === '/api/goals' && method === 'POST') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const body = await readBody(req);
+      const teamName = (body.team || '').trim();
+      if (!teamName) return sendJSON(res, 400, { error: 'no_team' });
+
+      const cacheKey = 'goals:' + teamName.toLowerCase();
+      const cached = getCached(cacheKey, 600000);
+      if (cached) return sendJSON(res, 200, cached);
+
+      const team = await findTeam(teamName);
+      if (!team) return sendJSON(res, 404, { error: 'team_not_found' });
+
+      // последните 10 мача за голов анализ
+      const data = await apiFetch('/fixtures?team=' + team.id + '&last=10');
+      const fixtures = data.response || [];
+      let over25 = 0, under25 = 0, btts = 0, cleanSheets = 0, failedToScore = 0;
+      let totalGoals = 0, scoredFirst = 0, counted = 0;
+
+      fixtures.forEach(f => {
+        const isHome = f.teams.home.id === team.id;
+        const gf = isHome ? f.goals.home : f.goals.away;
+        const ga = isHome ? f.goals.away : f.goals.home;
+        if (gf == null || ga == null) return;
+        counted++;
+        const matchGoals = gf + ga;
+        totalGoals += matchGoals;
+        if (matchGoals > 2.5) over25++; else under25++;
+        if (gf > 0 && ga > 0) btts++;
+        if (ga === 0) cleanSheets++;
+        if (gf === 0) failedToScore++;
+      });
+
+      const pct = (n) => counted ? Math.round((n / counted) * 100) : 0;
+      const result = {
+        team: { id: team.id, name: team.name, logo: team.logo, country: team.country },
+        goals: {
+          played: counted,
+          avgTotal: counted ? Math.round((totalGoals / counted) * 100) / 100 : 0,
+          over25: pct(over25), under25: pct(under25),
+          btts: pct(btts), cleanSheets: pct(cleanSheets),
+          failedToScore: pct(failedToScore)
+        }
+      };
+      setCached(cacheKey, result);
+      return sendJSON(res, 200, result);
+    }
+
+    // ---------- КОЕФИЦИЕНТИ ----------
+    if (route === '/api/odds') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
+      const fixtureId = reqUrl.searchParams.get('fixture');
+      if (!fixtureId) return sendJSON(res, 400, { error: 'missing_fixture' });
+
+      const cacheKey = 'odds:' + fixtureId;
+      const cached = getCached(cacheKey, 300000); // 5 мин
+      if (cached) return sendJSON(res, 200, cached);
+
+      try {
+        const data = await apiFetch('/odds?fixture=' + fixtureId);
+        const resp = (data.response || [])[0];
+        if (!resp || !resp.bookmakers || resp.bookmakers.length === 0) {
+          return sendJSON(res, 200, { available: false });
+        }
+        // взимаме първия букмейкър и пазара "Match Winner"
+        const bm = resp.bookmakers[0];
+        const matchWinner = (bm.bets || []).find(b => b.name === 'Match Winner');
+        let odds = null;
+        if (matchWinner) {
+          const vals = matchWinner.values || [];
+          odds = {
+            home: (vals.find(v => v.value === 'Home') || {}).odd || null,
+            draw: (vals.find(v => v.value === 'Draw') || {}).odd || null,
+            away: (vals.find(v => v.value === 'Away') || {}).odd || null
+          };
+        }
+        const result = { available: !!odds, bookmaker: bm.name, odds: odds };
+        setCached(cacheKey, result);
+        return sendJSON(res, 200, result);
+      } catch (err) {
+        return sendJSON(res, 200, { available: false });
+      }
+    }
+
+    // ---------- КОНТУЗИИ ----------
+    if (route === '/api/injuries') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
+      const fixtureId = reqUrl.searchParams.get('fixture');
+      if (!fixtureId) return sendJSON(res, 400, { error: 'missing_fixture' });
+
+      const cacheKey = 'injuries:' + fixtureId;
+      const cached = getCached(cacheKey, 600000);
+      if (cached) return sendJSON(res, 200, cached);
+
+      try {
+        const data = await apiFetch('/injuries?fixture=' + fixtureId);
+        const players = (data.response || []).map(i => ({
+          player: i.player ? i.player.name : '',
+          team: i.team ? i.team.name : '',
+          reason: i.player ? i.player.reason : '',
+          type: i.player ? i.player.type : ''
+        }));
+        const result = { count: players.length, players: players };
+        setCached(cacheKey, result);
+        return sendJSON(res, 200, result);
+      } catch (err) {
+        return sendJSON(res, 200, { count: 0, players: [] });
+      }
+    }
+
     if (route === '/api/predict' && method === 'POST') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
       const body = await readBody(req);
