@@ -3625,7 +3625,6 @@ document.getElementById('logoutBtn').addEventListener('click', doLogout);
   });
 });
 
-updateProLocks(); // заключи инструментите веднага при зареждане
 checkSession();
 
 // ===== КРАЙ РЕГИСТРАЦИЯ / ВХОД =====
@@ -4373,6 +4372,7 @@ function showProGate() {
 }
 
 function updateProLocks() {
+  if (typeof PRO_TOOLS === 'undefined') return;
   const isPro = userIsPro();
   document.querySelectorAll('.tool-card[data-tool]').forEach(card => {
     const t = card.getAttribute('data-tool');
@@ -4400,6 +4400,7 @@ document.querySelectorAll('.tool-card[data-tool]').forEach(card => {
     openTool(t);
   });
 });
+updateProLocks(); // заключи при зареждане
 document.getElementById('toolModalClose').addEventListener('click', () => toolModal.classList.remove('open'));
 toolModal.addEventListener('click', (e) => { if (e.target === toolModal) toolModal.classList.remove('open'); });
 
