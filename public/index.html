@@ -3422,6 +3422,7 @@ document.querySelectorAll('.tabs .tab').forEach(tab => {
     clearCountdowns();
 
     if (which === 'safe') {
+      if (!userIsPro()) { showProGate(); return; }
       if (sureC) sureC.style.display = 'block';
       loadSureBets();
     } else if (which === 'today') {
