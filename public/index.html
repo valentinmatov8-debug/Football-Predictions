@@ -840,6 +840,16 @@
 
   .match-card.live::before { background: var(--live); }
   .match-card.high-conf::before { background: var(--green); }
+  .match-card.today-card::before { background: var(--gold); }
+
+  @keyframes countdown-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .countdown-timer {
+    animation: countdown-pulse 2s ease-in-out infinite;
+    letter-spacing: 1px;
+  }
 
   .match-ai-select {
     margin-top: 10px;
@@ -1784,6 +1794,8 @@
         <div id="liveMatchesContainer"></div>
         <!-- СИГУРНИ ЗАЛОЗИ (таб Сигурни) -->
         <div id="sureBetsContainer" style="display:none;"></div>
+        <!-- ДНЕС (предстоящи мачове) -->
+        <div id="todayMatchesContainer" style="display:none;"></div>
         <div id="liveLoading" class="live-loading" style="display:none;" data-i18n="loading">Зареждане на мачове на живо…</div>
         <div id="liveError" class="live-error" style="display:none;"></div>
 
@@ -2126,7 +2138,7 @@ const translations = {
   bg: {
     navHome:"Начало", navPredictions:"Прогнози", navLive:"На живо", navStats:"Статистики", navTools:"Инструменти", navCommunity:"Общност",
     login:"Вход", proAccess:"PRO достъп",
-    leagues:"Лиги", myPredictions:"Моите прогнози", correctThisWeek:"Точни тази седмица", totalAccuracy:"Точност общо", streak:"Серия", streakVal:"5 поредни", inARow:"поредни", confidence:"увереност", aiPick:"AI препоръка", draw:"Равенство", loadingSure:"Анализирам мачове за сигурни залози…", noSureBets:"В момента няма мачове с висока увереност. Провери пак по-късно.",
+    leagues:"Лиги", myPredictions:"Моите прогнози", correctThisWeek:"Точни тази седмица", totalAccuracy:"Точност общо", streak:"Серия", streakVal:"5 поредни", inARow:"поредни", confidence:"увереност", aiPick:"AI препоръка", draw:"Равенство", loadingSure:"Анализирам мачове за сигурни залози…", noSureBets:"В момента няма мачове с висока увереност. Провери пак по-късно.", noTodayMatches:"Няма предстоящи мачове за днес.", countdownLabel:"Старт след",
     tools:"Инструменти", toolAI:"AI Прогноза", toolStats:"Статистики", toolH2H:"Директни срещи", toolOdds:"Движение на коефициенти", toolGoals:"Голова статистика", toolCorners:"Корнери & карти", toolInjuries:"Контузии & наредба", toolCalc:"Калкулатор печалба",
     tabLive:"На живо (3)", tabToday:"Днес (14)", tabTomorrow:"Утре (22)", tabTop:"Топ избори", tabSafe:"Сигурни",
     liveMatches:"Срещи на живо", seeAll:"Виж всички →",
@@ -3238,6 +3250,127 @@ async function loadSureBets() {
   }
 }
 
+// ===== COUNTDOWN ТАЙМЕРИ ЗА ПРЕДСТОЯЩИ МАЧОВЕ =====
+let countdownIntervals = [];
+
+function clearCountdowns() {
+  countdownIntervals.forEach(id => clearInterval(id));
+  countdownIntervals = [];
+}
+
+function startCountdowns() {
+  clearCountdowns();
+  document.querySelectorAll('.countdown-timer[data-kickoff]').forEach(el => {
+    const kickoff = new Date(el.getAttribute('data-kickoff')).getTime();
+    function tick() {
+      const diff = kickoff - Date.now();
+      if (diff <= 0) {
+        el.textContent = '⚽ Започна!';
+        el.style.color = 'var(--green)';
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      el.textContent = (h > 0 ? h + 'ч ' : '') + m + 'м ' + s + 'с';
+    }
+    tick();
+    const id = setInterval(tick, 1000);
+    countdownIntervals.push(id);
+  });
+}
+
+// Изгражда карта за предстоящ мач (с countdown и AI бутон)
+function buildTodayMatchCard(m, dict) {
+  const flag = m.flag ? `<img src="${m.flag}" style="width:16px;height:11px;vertical-align:middle;border-radius:2px;" onerror="this.style.display='none'"> ` : '';
+  const homeLogo = m.home.logo ? `<img src="${m.home.logo}" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">` : '⚽';
+  const awayLogo = m.away.logo ? `<img src="${m.away.logo}" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">` : '⚽';
+
+  // Ако мачът вече е жив или свършил — показваме резултата
+  if (m.isLive || m.isFinished) {
+    return buildMatchCard(m, dict);
+  }
+
+  const kickoffTime = new Date(m.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  return `
+    <div class="match-card today-card" data-fixture-id="${m.id}">
+      <div class="match-meta">
+        <div class="match-league">${flag}${escapeHtmlClient(m.league)}</div>
+        <div class="match-time" style="font-size:13px;color:var(--gold);">🕐 ${kickoffTime}</div>
+      </div>
+      <div class="match-teams">
+        <div class="team">
+          <div class="team-logo">${homeLogo}</div>
+          <div><div class="team-name">${escapeHtmlClient(m.home.name)}</div></div>
+        </div>
+        <div class="score-box" style="flex-direction:column;gap:4px;">
+          <div style="font-size:11px;color:var(--muted);text-align:center;">${dict.countdownLabel || 'Старт след'}</div>
+          <div class="countdown-timer" data-kickoff="${m.date}" style="font-size:15px;font-weight:800;color:var(--gold);text-align:center;min-width:90px;">--:--</div>
+        </div>
+        <div class="team away">
+          <div class="team-logo">${awayLogo}</div>
+          <div><div class="team-name">${escapeHtmlClient(m.away.name)}</div></div>
+        </div>
+      </div>
+      <div class="match-ai-select" data-ai-home="${escapeHtmlClient(m.home.name)}" data-ai-away="${escapeHtmlClient(m.away.name)}">
+        <div class="match-btn-row">
+          <button class="match-action-btn ai-predict-btn" style="width:100%;justify-content:center;">
+            🤖 ${dict.selectForAI || 'AI Прогноза'}
+          </button>
+        </div>
+        <div class="ai-inline-result"></div>
+      </div>
+    </div>`;
+}
+
+// Зарежда предстоящите мачове за днес
+async function loadTodayMatches() {
+  const dict = translations[currentLang()];
+  const container = document.getElementById('todayMatchesContainer');
+  const loading = document.getElementById('liveLoading');
+  if (!container) return;
+
+  loading.style.display = 'block';
+  loading.textContent = dict.loading || 'Зареждане…';
+
+  try {
+    const res = await fetch('/api/today');
+    if (!res.ok) throw new Error('server');
+    const data = await res.json();
+    loading.style.display = 'none';
+
+    // Показваме само предстоящите (не живите и не свършилите)
+    const upcoming = (data.matches || []).filter(m => !m.isFinished);
+
+    if (upcoming.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);">
+        <div style="font-size:36px;margin-bottom:12px;">📅</div>
+        <div style="font-size:15px;">${dict.noTodayMatches || 'Няма предстоящи мачове за днес'}</div>
+      </div>`;
+    } else {
+      // Групираме по лига
+      const byLeague = {};
+      upcoming.forEach(m => {
+        if (!byLeague[m.league]) byLeague[m.league] = [];
+        byLeague[m.league].push(m);
+      });
+
+      let html = '';
+      Object.entries(byLeague).forEach(([league, matches]) => {
+        html += matches.map(m => buildTodayMatchCard(m, dict)).join('');
+      });
+      container.innerHTML = html;
+
+      // Стартираме countdown таймерите
+      startCountdowns();
+    }
+  } catch (err) {
+    loading.style.display = 'none';
+    container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);">${dict.noTodayMatches || 'Грешка при зареждане'}</div>`;
+  }
+}
+
 // ===== ТАБОВЕ (превключване) =====
 document.querySelectorAll('.tabs .tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -3246,14 +3379,24 @@ document.querySelectorAll('.tabs .tab').forEach(tab => {
     const which = tab.getAttribute('data-tab');
     const liveC = document.getElementById('liveMatchesContainer');
     const sureC = document.getElementById('sureBetsContainer');
+    const todayC = document.getElementById('todayMatchesContainer');
     const demo = document.getElementById('demoMatches');
+
+    // Скриваме всичко
+    if (liveC) liveC.style.display = 'none';
+    if (sureC) sureC.style.display = 'none';
+    if (todayC) todayC.style.display = 'none';
+    if (demo) demo.style.display = 'none';
+    clearCountdowns();
+
     if (which === 'safe') {
-      if (liveC) liveC.style.display = 'none';
-      if (demo) demo.style.display = 'none';
       if (sureC) sureC.style.display = 'block';
       loadSureBets();
+    } else if (which === 'today') {
+      if (todayC) todayC.style.display = 'block';
+      loadTodayMatches();
     } else {
-      if (sureC) sureC.style.display = 'none';
+      // live, tomorrow, top — показваме живите мачове
       if (liveC) liveC.style.display = 'block';
       loadLiveMatches();
     }
