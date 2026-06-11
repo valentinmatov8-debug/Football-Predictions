@@ -1,143 +1,139 @@
-// ============================================================
-//  GoalMind — сървър с база данни, регистрация и вход
-// ============================================================
-
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+const http = изискване('http');
+const fs = изискване('fs');
+const път = изискване('път');
+const крипто = изискване('крипто');
 const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
+const bcrypt = изискване('bcryptjs');
 
-const PORT = process.env.PORT || 3000;
+const ПОРТ = process.env.ПОРТ || 3000;
 const API_KEY = process.env.API_FOOTBALL_KEY;
 const API_BASE = 'https://v3.football.api-sports.io';
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const PUBLIC_DIR = път.присъединяване(__dirname, 'public');
 
 // ---------- База данни (PostgreSQL от Render) ----------
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+const pool = нов Pool({
+  connectionString: process.env.URL_НА_БАЗА_ДАННИ,
   ssl: { rejectUnauthorized: false }
 });
 
 // Създаваме таблиците при стартиране, ако ги няма
-async function initDatabase() {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        username TEXT,
-        password_hash TEXT NOT NULL,
-        is_pro BOOLEAN DEFAULT false,
-        created_at TIMESTAMP DEFAULT NOW()
+асинхронна функция initDatabase() {
+  опитай {
+    чакам pool.query(`
+      СЪЗДАВАНЕ НА ТАБЛИЦА, АКО НЕ СЪЩЕСТВУВА потребители (
+        идентификатор на СЕРИЕН ПЪРВИЧЕН КЛЮЧ,
+        имейл ТЕКСТ УНИКАЛЕН НЕ НУЛЕВ,
+        потребителско име TEXT,
+        ТЕКСТЪТ НА password_hash НЕ Е NULL,
+        is_pro БУЛЕВ ПО СТАНДАРТНО НЕВЯРНО,
+        created_at ВРЕМЕВ КЛЕМКА ПО ПО СТАНДАРТ СЕГА()
       );
     `);
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS sessions (
-        token TEXT PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT NOW()
+    чакам pool.query(`
+      СЪЗДАВАНЕ НА ТАБЛИЦА, АКО НЕ СЪЩЕСТВУВА сесии (
+        ТЕКСТ НА ТОКСОН, ПЪРВИЧЕН КЛЮЧ,
+        user_id ЦЕЛОЧИСЛЕНИ ПРЕПОРЪКИ users(id) ПРИ ИЗТРИВАНЕ КАСКАДНО,
+        created_at ВРЕМЕВ КЛЕМКА ПО ПО СТАНДАРТ СЕГА()
       );
     `);
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS visits (
-        country_code TEXT PRIMARY KEY,
-        country_name TEXT,
-        count INTEGER DEFAULT 0
+    чакам pool.query(`
+      СЪЗДАВАНЕ НА ТАБЛИЦА, АКО НЕ СЪЩЕСТВУВА посещения (
+        country_code TEXT ПЪРВИЧЕН КЛЮЧ,
+        име_на_държава ТЕКСТ,
+        брой ЦЯЛО ЧИСЛО ПО СТАНДАРТНО 0
       );
     `);
     // Прогнози - всяка прогноза, която AI прави (за самообучение и статистика)
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS predictions (
-        fixture_id BIGINT PRIMARY KEY,
-        home_team TEXT,
-        away_team TEXT,
-        league TEXT,
-        match_date TIMESTAMP,
-        prob_home INTEGER,
-        prob_draw INTEGER,
-        prob_away INTEGER,
-        predicted TEXT,
-        confidence INTEGER,
-        actual_home INTEGER,
-        actual_away INTEGER,
-        actual_result TEXT,
-        correct BOOLEAN,
-        checked BOOLEAN DEFAULT false,
-        created_at TIMESTAMP DEFAULT NOW()
+    чакам pool.query(`
+      СЪЗДАВАНЕ НА ТАБЛИЦА, АКО НЕ СЪЩЕСТВУВА прогнози (
+        fixture_id BIGINT ПЪРВИЧЕН КЛЮЧ,
+        домашен_отбор ТЕКСТ,
+        гостуващ отбор ТЕКСТ,
+        лига ТЕКСТ,
+        ВРЕМЕНЕН КЛЕЙК НА ДАТА НА СЪБИТИЯ,
+        prob_home ЦЯЛО ЧИСЛО,
+        prob_draw ЦЯЛО ЧИСЛО,
+        prob_away ЦЯЛО ЧИСЛО,
+        предвиден TEXT,
+        доверие ЦЯЛО ЧИСЛО,
+        действителен_дом ЦЯЛО ЧИСЛО,
+        действително_далеч ЦЯЛО ЧИСЛО,
+        действителен_резултат ТЕКСТ,
+        правилен БУЛЕВ,
+        проверено БУЛЕВО ПО ПО ПО ПОРАДИ НЕВЯРНО,
+        created_at ВРЕМЕВ КЛЕМКА ПО ПО СТАНДАРТ СЕГА()
       );
     `);
     // Тежести за самообучението (как AI претегля факторите)
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS ai_weights (
-        id INTEGER PRIMARY KEY DEFAULT 1,
-        form_weight REAL DEFAULT 1.0,
-        home_advantage REAL DEFAULT 1.0,
-        goals_weight REAL DEFAULT 1.0,
-        h2h_weight REAL DEFAULT 1.0,
-        total_checked INTEGER DEFAULT 0,
-        total_correct INTEGER DEFAULT 0
+    чакам pool.query(`
+      СЪЗДАВАНЕ НА ТАБЛИЦА, АКО НЕ СЪЩЕСТВУВА ai_weights (
+        id ЦЯЛО ЧИСЛО ПЪРВИЧЕН КЛЮЧ ПО СТАНДАРТНО 1,
+        форма_тегло РЕАЛНА СТОЙНОСТ ПО СТАНДАРТ 1.0,
+        home_advantage РЕАЛНА ВЕРСИЯ ПО СТАНДАРТНО ПОСТАВЯНЕ 1.0,
+        тегло_на_целите РЕАЛНА СТОЙНОСТ ПО СТАНДАРТ 1.0,
+        h2h_weight РЕАЛНА СТОЙНОСТ ПО СТАНДАРТ 1.0,
+        total_checked ЦЯЛО ЧИСЛО ПО СТАНДАРТНО 0,
+        total_correct ЦЯЛО ЧИСЛО ПО СТАНДАРТНО 0
       );
     `);
     // вкарваме начален ред за тежестите, ако липсва
-    await pool.query(`INSERT INTO ai_weights (id) VALUES (1) ON CONFLICT (id) DO NOTHING;`);
+    изчакайте pool.query(`INSERT INTO ai_weights (id) VALUES (1) ON CONFLICT (id) НЕ ПРАВЯ НИЩО;`);
     console.log('✓ Базата данни е готова');
-  } catch (err) {
+  } улов (грешка) {
     console.error('Грешка при създаване на таблиците:', err.message);
   }
 }
 
 // ---------- Кеш за API ----------
-const cache = {};
-function getCached(key, maxAgeMs) {
-  const e = cache[key];
-  if (e && (Date.now() - e.time) < maxAgeMs) return e.data;
-  return null;
+константен кеш = {};
+функция getCached(ключ, maxAgeMs) {
+  const e = кеш[ключ];
+  ако (e && (Дата.сега() - e.време) < maxAgeMs) върне e.данни;
+  връщане на нула;
 }
-function setCached(key, data) { cache[key] = { data, time: Date.now() }; }
+функция setCached(ключ, данни) { кеш[ключ] = { данни, време: Дата.сега() }; }
 
-async function apiFetch(endpoint) {
-  const res = await fetch(API_BASE + endpoint, { headers: { 'x-apisports-key': API_KEY } });
-  if (!res.ok) throw new Error('API ' + res.status);
-  return res.json();
+асинхронна функция apiFetch(крайна точка) {
+  const res = изчакване на fetch(API_BASE + крайна точка, { заглавки: { 'x-apisports-key': API_KEY } });
+  ако (!res.ok) throw new Error('API ' + res.status);
+  върне res.json();
 }
 
-function simplifyFixture(f) {
-  const status = f.fixture.status.short;
-  const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(status);
-  const isFinished = ['FT','AET','PEN'].includes(status);
-  return {
-    id: f.fixture.id, league: f.league.name, leagueId: f.league.id, flag: f.league.flag,
-    date: f.fixture.date, status: status, elapsed: f.fixture.status.elapsed,
-    isLive: isLive, isFinished: isFinished,
-    home: { name: f.teams.home.name, logo: f.teams.home.logo, goals: f.goals.home },
-    away: { name: f.teams.away.name, logo: f.teams.away.logo, goals: f.goals.away }
+функция simplyFixture(f) {
+  const статус = f.fixture.status.short;
+  const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(статус);
+  const isFinished = ['FT','AET','PEN'].includes(статус);
+  връщане {
+    идентификатор: f.fixture.id, лига: f.league.name, leagueId: f.league.id, флаг: f.league.flag,
+    дата: f.fixture.date, статус: status, изтекло: f.fixture.status.elapsed,
+    еНаЖиво: еНаЖиво, еЗавършено: еЗавършено,
+    начална страница: { име: f.teams.home.name, лого: f.teams.home.logo, цели: f.goals.home },
+    гостувания: { име: f.teams.away.name, лого: f.teams.away.logo, голове: f.goals.away }
   };
 }
 
-// ---------- Засичане на държава по IP + броене на посещение ----------
-async function recordVisit(req) {
-  try {
-    // взимаме реалния IP (Render праща X-Forwarded-For)
+// ---------- Засичане на държавата по IP + броене на посещение ----------
+асинхронна функция recordVisit(req) {
+  опитай {
+    // вземаме реалния IP (Render праща X-Forwarded-For)
     const fwd = req.headers['x-forwarded-for'];
     const ip = fwd ? fwd.split(',')[0].trim() : (req.socket.remoteAddress || '');
-    if (!ip || ip.startsWith('127.') || ip === '::1') return; // локален - пропускаме
+    if (!ip || ip.startsWith('127.') || ip === '::1') връщане; // локален - пропускаме
 
-    // безплатно засичане на държава
-    const geoRes = await fetch('https://ipapi.co/' + ip + '/json/');
-    if (!geoRes.ok) return;
-    const geo = await geoRes.json();
-    const code = geo.country_code || 'XX';
-    const name = geo.country_name || 'Unknown';
+    // безплатно засичане на държавата
+    const geoRes = изчакване на fetch('https://ipapi.co/' + ip + '/json/');
+    ако (!geoRes.ok) върне;
+    const geo = изчакване geoRes.json();
+    const код = geo.code_country || 'XX';
+    const име = geo.име_на_държава || 'Неизвестно';
 
-    // увеличаваме брояча за тази държава (UPSERT)
-    await pool.query(
-      `INSERT INTO visits (country_code, country_name, count) VALUES ($1, $2, 1)
-       ON CONFLICT (country_code) DO UPDATE SET count = visits.count + 1, country_name = $2`,
-      [code, name]
+    //увеличавам брояча за тази държава (UPSERT)
+    чакам pool.query(
+      `INSERT INTO посещения (код_на_държава, име_на_държава, брой) СТОЙНОСТИ ($1, $2, 1)
+       ПРИ КОНФЛИКТ (код_на_държава) ИЗПЪЛНЕТЕ АКТУАЛИЗАЦИЯТА SET count = visits.count + 1, country_name = $2`,
+      [код, име]
     );
-  } catch (err) {
+  } улов (грешка) {
     // тихо - посещенията не са критични
   }
 }
@@ -145,211 +141,211 @@ async function recordVisit(req) {
 // ---------- Помощни за AI прогноза ----------
 
 // Намира отбор по име, връща {id, name, logo} или null
-async function findTeam(name) {
-  const data = await apiFetch('/teams?search=' + encodeURIComponent(name));
-  const t = (data.response || [])[0];
-  if (!t) return null;
-  return { id: t.team.id, name: t.team.name, logo: t.team.logo, country: t.team.country, founded: t.team.founded };
+асинхронна функция findTeam(име) {
+  const данни = изчакване на apiFetch('/отбори?търсачка=' + encodeURIComponent(име));
+  const t = (данни.отговор || [])[0];
+  ако (!t) върне null;
+  връщане { id: t.team.id, име: t.team.name, лого: t.team.logo, държава: t.team.country, основан: t.team.founded };
 }
 
-// Тегли последните N мача на отбор и смята форма
-async function getTeamForm(teamId, count) {
-  const n = count || 5;
-  const data = await apiFetch('/fixtures?team=' + teamId + '&last=' + n);
+// Тегли смята последната N мача за отбор и форма
+асинхронна функция getTeamForm(teamId, count) {
+  константа n = брой || 5;
+  const данни = изчакване apiFetch('/figures?team=' + teamId + '&last=' + n);
   const fixtures = data.response || [];
-  let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
+  Нека победи = 0, равенства = 0, загуби = 0, голове за = 0, голове срещу = 0;
   const formStr = [];
-  const recent = [];
+  const скорошни = [];
 
   fixtures.forEach(f => {
     const isHome = f.teams.home.id === teamId;
     const gf = isHome ? f.goals.home : f.goals.away;
     const ga = isHome ? f.goals.away : f.goals.home;
-    if (gf == null || ga == null) return;
-    goalsFor += gf; goalsAgainst += ga;
-    let result;
-    if (gf > ga) { wins++; result = 'W'; }
-    else if (gf < ga) { losses++; result = 'L'; }
-    else { draws++; result = 'D'; }
-    formStr.push(result);
+    ако (gf == null || ga == null) връщане;
+    целиЗа += без грохо; целиСрещу += га;
+    нека резултатът;
+    ако (gf > ga) { wins++; резултат = 'W'; }
+    иначе ако (gf < ga) { загуби++; резултат = 'L'; }
+    иначе { draws++; резултат = 'D'; }
+    formStr.push(резултат);
     const opp = isHome ? f.teams.away : f.teams.home;
     recent.push({
-      opponent: opp.name, isHome: isHome,
-      score: gf + '-' + ga, result: result, date: f.fixture.date
+      опонент: име.на.опонент, еДом: еДом,
+      резултат: gf + '-' + ga, резултат: result, дата: f.fixture.date
     });
   });
 
-  const played = wins + draws + losses;
-  return {
-    played, wins, draws, losses, goalsFor, goalsAgainst,
-    form: formStr.join(''),
-    avgScored: played ? (goalsFor / played) : 0,
-    avgConceded: played ? (goalsAgainst / played) : 0,
+  const изиграна = победи + равенства + загуби;
+  връщане {
+    играни, победи, равенства, загуби, головеЗа, головеСрещу,
+    форма: formStr.join(''),
+    Средно отбелязани голове: изиграни ? (голове за / изиграни) : 0,
+    средно допуснати голове: изиграни ? (допуснати голове / изиграни): 0,
     // точки от форма: победа=3, равен=1
-    points: wins * 3 + draws,
-    recent: recent
+    точки: победи * 3 + равенства,
+    скорошно: скорошно
   };
 }
 
 // Директни срещи между два отбора
-async function getH2H(id1, id2, count) {
-  const n = count || 5;
-  const data = await apiFetch('/fixtures/headtohead?h2h=' + id1 + '-' + id2 + '&last=' + n);
+асинхронна функция getH2H(id1, id2, брой) {
+  константа n = брой || 5;
+  const данни = изчакване на apiFetch('/fixtures/headtohead?h2h=' + id1 + '-' + id2 + '&last=' + n);
   const fixtures = data.response || [];
-  let team1Wins = 0, team2Wins = 0, draws = 0;
-  const matches = [];
+  нека отбор1Победи = 0, отбор2Победи = 0, равенства = 0;
+  константни съвпадения = [];
   fixtures.forEach(f => {
-    const h = f.goals.home, a = f.goals.away;
-    if (h == null || a == null) return;
+    const h = f.goals.home, a = f.goals.homes;
+    ако (h == null || a == null) връщане;
     const homeId = f.teams.home.id;
-    let winnerId = null;
-    if (h > a) winnerId = homeId;
-    else if (a > h) winnerId = f.teams.away.id;
-    if (winnerId === id1) team1Wins++;
-    else if (winnerId === id2) team2Wins++;
-    else draws++;
-    matches.push({
-      home: f.teams.home.name, away: f.teams.away.name,
-      score: h + '-' + a, date: f.fixture.date
+    нека winnerId = null;
+    ако (h > a) winnerId = homeId;
+    иначе ако (a > h) winnerId = f.teams.away.id;
+    ако (ИдентификаторНаПобедител === id1) отбор1Победи++;
+    иначе ако (ИдентификаторНаПобедител === id2) отбор2Победи++;
+    иначе рисува++;
+    съвпадения.push({
+      домакин: f.teams.home.name, гост: f.teams.away.name,
+      резултат: h + '-' + a, дата: f.fixture.date
     });
   });
-  return { total: matches.length, team1Wins, team2Wins, draws, matches };
+  връщане { общо: мачове.дължина, отбор1Победи, отбор2Победи, равенства, мачове };
 }
 
 // Изчислява прогноза от реалните данни (безплатна формула, с тежести за самообучение)
-function computePrediction(home, away, h2h, weights) {
+функция computePrediction(домакин, гост, h2h, тежести) {
   // тежести по подразбиране (ако няма обучени)
-  const w = weights || { form_weight: 1.0, home_advantage: 1.0, goals_weight: 1.0, h2h_weight: 1.0 };
+  const w = тегла || { форма_тегло: 1.0, домашно_предимство: 1.0, цели_тегло: 1.0, h2h_тегло: 1.0 };
 
-  // Силов рейтинг: форма (точки) + голова разлика * тегло, с домакинско предимство * тегло
-  const homeGoalDiff = (home.avgScored - home.avgConceded) * 2 * w.goals_weight;
-  const awayGoalDiff = (away.avgScored - away.avgConceded) * 2 * w.goals_weight;
+  // Силов рейтинг: форма (точки) + разлика в главата * тегло, с домакинско предимство * тегло
+  const РазликаПоГолове = (средноВкараниГолове - средноДопуснатиГолове) * 2 * w.тегло_на_головете;
+  const РазликаВГоловетеГост = (СредноВкараниГоловеГост - СредноДопуснатиГоловеГост) * 2 * w.тегло_на_головете;
   const homeStrength = home.points * w.form_weight + homeGoalDiff + 1.2 * w.home_advantage;
   const awayStrength = away.points * w.form_weight + awayGoalDiff;
 
   // H2H бонус * тегло
-  let homeH2H = 0, awayH2H = 0;
-  if (h2h && h2h.total > 0) {
+  нека homeH2H = 0, awayH2H = 0;
+  ако (h2h && h2h.total > 0) {
     homeH2H = h2h.team1Wins * 0.8 * w.h2h_weight;
-    awayH2H = h2h.team2Wins * 0.8 * w.h2h_weight;
+    гостH2H = h2h.team2Wins * 0.8 * w.h2h_weight;
   }
 
   const homeScore = Math.max(0.1, homeStrength + homeH2H);
   const awayScore = Math.max(0.1, awayStrength + awayH2H);
 
   // Базови вероятности
-  const total = homeScore + awayScore;
-  let pHome = homeScore / total;
-  let pAway = awayScore / total;
+  const общо = домашенРезултат + гостуващРезултат;
+  нека pHome = homeScore / total;
+  нека pAway = awayScore / total;
 
-  // Дял за равенство според близостта на силите
-  const closeness = 1 - Math.abs(pHome - pAway);
-  const pDraw = 0.18 + closeness * 0.14;
+  // Дял за равенство спрямо близостта на силите
+  const близост = 1 - Math.abs(pHome - pAway);
+  const pDraw = 0.18 + близост * 0.14;
 
-  const scale = (1 - pDraw);
-  pHome = pHome * scale;
-  pAway = pAway * scale;
+  константна скала = (1 - pDraw);
+  pHoom = pHoom * мащаб;
+  pAway = pAway * мащаб;
 
   const homePct = Math.round(pHome * 100);
   const awayPct = Math.round(pAway * 100);
   const drawPct = 100 - homePct - awayPct;
 
-  const expHomeGoals = (home.avgScored + away.avgConceded) / 2;
-  const expAwayGoals = (away.avgScored + home.avgConceded) / 2;
+  const expДомашниГолове = (домакин.средноВкараниГолове + гост.средноДопуснатиГолове) / 2;
+  const expAwayGoals = (гост.средноВкараниГолове + домакин.средноДопуснатиГолове) / 2;
   const expTotal = expHomeGoals + expAwayGoals;
 
-  let pick, pickType;
-  if (homePct > awayPct && homePct > drawPct) { pick = home.name; pickType = '1'; }
-  else if (awayPct > homePct && awayPct > drawPct) { pick = away.name; pickType = '2'; }
-  else { pick = 'X'; pickType = 'X'; }
+  нека избирам, pickType;
+  ако (homePct > awayPct && homePct > drawPct) { pick = home.name; pickType = '1'; }
+  иначе ако (awayPct > homePct && awayPct > drawPct) { pick = away.name; pickType = '2'; }
+  иначе { pick = 'X'; pickType = 'X'; }
 
-  const over25 = expTotal > 2.5;
+  конст над 25 = expTotal > 2.5;
   const bttsLikely = expHomeGoals > 0.9 && expAwayGoals > 0.9;
 
-  return {
-    homePct, drawPct, awayPct,
-    pick, pickType,
+  връщане {
+    домашенPct, drawPct, awayPct,
+    избор, изборТип,
     expHomeGoals: Math.round(expHomeGoals * 10) / 10,
     expAwayGoals: Math.round(expAwayGoals * 10) / 10,
     expTotalGoals: Math.round(expTotal * 10) / 10,
-    over25, bttsLikely,
-    confidence: Math.max(homePct, drawPct, awayPct)
+    над 25, вероятно
+    увереност: Math.max(homePct, drawPct, awayPct)
   };
 }
 
-// Чете тежестите на AI от базата
-async function getWeights() {
-  try {
+// Четете тежестта на AI от базата
+асинхронна функция getWeights() {
+  опитай {
     const r = await pool.query('SELECT * FROM ai_weights WHERE id = 1');
-    return r.rows[0] || null;
-  } catch (e) { return null; }
+    връщане на r.rows[0] || null;
+  } catch (e) { връщане на null; }
 }
 
 // Записва прогноза в базата (за самообучение и статистика)
-async function savePrediction(fixtureId, homeTeam, awayTeam, league, matchDate, pred) {
-  try {
-    await pool.query(
-      `INSERT INTO predictions (fixture_id, home_team, away_team, league, match_date, prob_home, prob_draw, prob_away, predicted, confidence)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       ON CONFLICT (fixture_id) DO NOTHING`,
-      [fixtureId, homeTeam, awayTeam, league, matchDate, pred.homePct, pred.drawPct, pred.awayPct, pred.pickType, pred.confidence]
+асинхронна функция savePrediction(figureId, homeTeam, awayTeam, league, matchDate, pred) {
+  опитай {
+    чакам pool.query(
+      `INSERT INTO прогнози (match_id, home_team, away_team, league, match_date, prob_home, prob_draw, prob_away, predicted, confidence)`
+       СТОЙНОСТИ ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       ПРИ КОНФЛИКТ (fixture_id) НЕ ПРАВЕТЕ НИЩО
+      [ИДнаМач, домакинскиОтбор, гостуващОтбор, лига, ДатаНаМач, предх.домашенОтбор, предх.равенОтбор, предх.гостуващОтбор, ТипНаМечта, предх.доверие]
     );
   } catch (e) { /* тихо */ }
 }
 
 // Проверява свършилите мачове и учи от тях (самообучение)
-let lastLearnTime = 0;
-async function checkAndLearn() {
+нека lastLearnTime = 0;
+асинхронна функция checkAndLearn() {
   // не по-често от веднъж на 10 мин
-  if (Date.now() - lastLearnTime < 600000) return;
+  ако (Date.now() - lastLearnTime < 600000) върне;
   lastLearnTime = Date.now();
-  try {
-    // взимаме непроверени прогнози за мачове, които вече трябва да са свършили
+  опитай {
+    // вземаме непроверени прогнози за мачове, които вече трябва да са свършили
     const pending = await pool.query(
-      `SELECT * FROM predictions WHERE checked = false AND match_date < NOW() - INTERVAL '2 hours' LIMIT 20`
+      `SELECT * FROM predictions WHERE checked = false AND match_date < NOW() - INTERVAL '2 часа' LIMIT 20`
     );
-    if (pending.rows.length === 0) return;
+    ако (pending.rows.length === 0) връщане;
 
-    let correctDelta = 0, checkedDelta = 0;
-    for (const p of pending.rows) {
+    нека correctDelta = 0, checkedDelta = 0;
+    за (const p от pending.rows) {
       // питаме API за резултата
-      let fx;
-      try {
-        const data = await apiFetch('/fixtures?id=' + p.fixture_id);
-        fx = (data.response || [])[0];
-      } catch (e) { continue; }
-      if (!fx) continue;
-      const status = fx.fixture.status.short;
-      if (!['FT','AET','PEN'].includes(status)) continue; // още не е свършил
+      нека fx;
+      опитай {
+        const данни = изчакване на apiFetch('/fixtures?id=' + p.fixture_id);
+        fx = (данни.отговор || [])[0];
+      } catch (e) { продължи; }
+      ако (!fx) продължи;
+      const статус = fx.fixture.status.short;
+      if (!['FT','AET','PEN'].includes(status)) продължи; // още не е свършил
 
       const gh = fx.goals.home, ga = fx.goals.away;
-      let actualResult = 'X';
-      if (gh > ga) actualResult = '1';
-      else if (ga > gh) actualResult = '2';
+      нека действителенРезултат = 'X';
+      ако (gh > ga) действителенРезултат = '1';
+      иначе ако (ga > gh) действителенРезултат = '2';
       const correct = (p.predicted === actualResult);
 
-      await pool.query(
-        `UPDATE predictions SET actual_home=$1, actual_away=$2, actual_result=$3, correct=$4, checked=true WHERE fixture_id=$5`,
+      чакам pool.query(
+        `АКТУАЛИЗИРАНЕ на прогнозите SET actual_home=$1, actual_away=$2, actual_result=$3, correct=$4, checked=true WHERE fixture_id=$5`,
         [gh, ga, actualResult, correct, p.fixture_id]
       );
-      checkedDelta++;
-      if (correct) correctDelta++;
+      провереноDelta++;
+      ако (правилно) правилноDelta++;
     }
 
-    if (checkedDelta > 0) {
+    ако (проверенДелта > 0) {
       // обновяваме общата статистика
-      await pool.query(
+      чакам pool.query(
         `UPDATE ai_weights SET total_checked = total_checked + $1, total_correct = total_correct + $2 WHERE id = 1`,
-        [checkedDelta, correctDelta]
+        [проверенДелта, правиленДелта]
       );
-      // самообучение: ако точността е ниска, леко коригираме тежестите
+      // самообучение: ако точността е ниска, леко коригираме тежестта
       const wq = await pool.query('SELECT * FROM ai_weights WHERE id = 1');
       const w = wq.rows[0];
-      if (w && w.total_checked >= 20) {
-        const accuracy = w.total_correct / w.total_checked;
+      ако (w && w.total_checked >= 20) {
+        константна точност = w.total_correct / w.total_checked;
         // ако сме под 50%, засилваме формата (най-важният фактор); ако над 60%, стабилизираме
-        if (accuracy < 0.5) {
-          await pool.query(`UPDATE ai_weights SET form_weight = LEAST(form_weight + 0.05, 2.0), home_advantage = LEAST(home_advantage + 0.03, 2.0) WHERE id = 1`);
+        ако (точност < 0,5) {
+          изчакайте pool.query(`UPDATE ai_weights SET form_weight = LEAST(form_weight + 0.05, 2.0), home_advantage = LEAST(home_advantage + 0.03, 2.0) WHERE id = 1`);
         }
       }
     }
@@ -357,715 +353,715 @@ async function checkAndLearn() {
 }
 
 // ---------- Помощни ----------
-function sendJSON(res, code, obj, headers) {
-  const h = Object.assign({ 'Content-Type': 'application/json; charset=utf-8' }, headers || {});
-  res.writeHead(code, h);
+функция sendJSON(res, код, obj, заглавки) {
+  const h = Object.assign({ 'Тип-съдържание': 'application/json; charset=utf-8' }, заглавки || {});
+  res.writeHead(код, h);
   res.end(JSON.stringify(obj));
 }
 
-function readBody(req) {
-  return new Promise((resolve) => {
-    let body = '';
-    req.on('data', chunk => { body += chunk; if (body.length > 1e6) req.destroy(); });
-    req.on('end', () => {
-      try { resolve(JSON.parse(body || '{}')); }
-      catch { resolve({}); }
+функция readBody(req) {
+  върне ново Promise((resolve) => {
+    нека тяло = '';
+    req.on('данни', chunk => { тяло += chunk; ако (body.length > 1e6) req.destroy(); });
+    req.on('край', () => {
+      опитайте { resolve(JSON.parse(body || '{}')); }
+      улов { разрешаване({}); }
     });
   });
 }
 
-function parseCookies(req) {
-  const header = req.headers.cookie || '';
-  const out = {};
-  header.split(';').forEach(p => {
+функция parseCookies(req) {
+  const заглавка = req.headers.cookie || '';
+  константа изход = {};
+  заглавие.split(';').forEach(p => {
     const i = p.indexOf('=');
-    if (i > -1) out[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1).trim());
+    ако (i > -1) out[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1).trim());
   });
-  return out;
+  връщане навън;
 }
 
-function validEmail(e) {
-  return typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+функция валиден имейл(e) {
+  връщане на тип e === 'низ' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-// Връща текущия потребител от сесийния cookie (или null)
-async function getCurrentUser(req) {
-  const cookies = parseCookies(req);
+// Връща текущия потребител от сесийна бисквитка (или null)
+асинхронна функция getCurrentUser(req) {
+  const бисквитки = parseCookies(req);
   const token = cookies.session;
-  if (!token) return null;
-  try {
-    const r = await pool.query(
-      `SELECT u.id, u.email, u.username, u.is_pro
-       FROM sessions s JOIN users u ON u.id = s.user_id
-       WHERE s.token = $1`, [token]);
-    return r.rows[0] || null;
-  } catch { return null; }
+  ако (!токен) върне null;
+  опитай {
+    const r = изчакване на pool.query(
+      `ИЗБЕРЕТЕ потребителско име, потребителски имейл, потребителско име, u.is_pro
+       ОТ сесии s ПРИСЪЕДИНЕТЕ се към потребители u ВКЛ. u.id = s.user_id
+       КЪДЕТО s.token = $1`, [токен]);
+    връщане на r.rows[0] || null;
+  } catch { връщане на null; }
 }
 
-const MIME = {
-  '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
-  '.css':'text/css; charset=utf-8', '.png':'image/png', '.jpg':'image/jpeg',
-  '.svg':'image/svg+xml', '.ico':'image/x-icon', '.json':'application/json'
+константа MIME = {
+  '.html':'текст/html; charset=utf-8', '.js':'текст/javascript; charset=utf-8',
+  '.css':'текст/css; charset=utf-8', '.png':'изображение/png', '.jpg':'изображение/jpeg',
+  '.svg':'изображение/svg+xml', '.ico':'изображение/x-икона', '.json':'приложение/json'
 };
 
-function serveStatic(res, filePath) {
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
+функция serveStatic(res, filePath) {
+  fs.readFile(filePath, (err, данни) => {
+    ако (грешка) {
       fs.readFile(path.join(PUBLIC_DIR,'index.html'), (e2, html) => {
-        if (e2) { res.writeHead(404); res.end('Not found'); return; }
-        res.writeHead(200, { 'Content-Type':'text/html; charset=utf-8' });
+        ако (e2) { res.writeHead(404); res.end('Не е намерен'); return; }
+        res.writeHead(200, { 'Тип-съдържание':'текст/html; charset=utf-8' });
         res.end(html);
       });
-      return;
+      връщане;
     }
-    const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
-    res.end(data);
+    const ext = път.външноиме(пътКъмфайл).вДолниБащи();
+    res.writeHead(200, { 'Тип-съдържание': MIME[въх] || 'приложение/поток-от-октет' });
+    res.end(данни);
   });
 }
 
 
-// ============================================================
-//   API заявки
-// ============================================================
-async function handleApi(req, res, route, method) {
-  try {
+// ==================================================================
+// API заявки
+// ==================================================================
+асинхронна функция handleApi(req, res, маршрут, метод) {
+  опитай {
     // ---------- РЕГИСТРАЦИЯ ----------
-    if (route === '/api/register' && method === 'POST') {
-      const body = await readBody(req);
-      const email = (body.email || '').trim().toLowerCase();
-      const password = body.password || '';
-      const username = (body.username || '').trim();
+    ако (маршрут === '/api/register' && метод === 'POST') {
+      const тяло = изчакване на readBody(req);
+      const имейл = (body.email || '').trim().toLowerCase();
+      const парола = тяло.парола || '';
+      const потребителско име = (body.потребителско име || '').trim();
 
-      if (!validEmail(email)) return sendJSON(res, 400, { error: 'invalid_email' });
-      if (password.length < 6) return sendJSON(res, 400, { error: 'weak_password' });
+      ако (!валиденИмейл(имейл)) върне sendJSON(res, 400, {грешка: 'невалиден_имейл' });
+      ако (парола.дължина < 6) върне sendJSON(res, 400, { грешка: 'слаба_парола' });
 
-      // проверка дали имейлът вече съществува
-      const exist = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-      if (exist.rows.length > 0) return sendJSON(res, 409, { error: 'email_taken' });
+      // дали проверката на имейла вече съществува
+      const exist = await pool.query('SELECT id FROM users WHERE email = $1', [имейл]);
+      ако (exist.rows.length > 0) върне sendJSON(res, 409, {грешка: 'email_taken' });
 
-      const hash = await bcrypt.hash(password, 10);
-      const r = await pool.query(
-        'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, email, username, is_pro',
-        [email, username || null, hash]);
-      const user = r.rows[0];
+      const hash = await bcrypt.hash(парола, 10);
+      const r = изчакване на pool.query(
+        'Вмъкнете в потребители (имейл, потребителско име, хеш_на_парола) стойности ($1, $2, $3) Връщайки id, имейл, потребителско_име, is_pro',
+        [имейл, потребителско име || null, хеш]);
+      const потребител = r.rows[0];
 
       // създаваме сесия
       const token = crypto.randomBytes(32).toString('hex');
-      await pool.query('INSERT INTO sessions (token, user_id) VALUES ($1, $2)', [token, user.id]);
+      изчакай pool.query('Вмъкни в сесии (токен, потребителски_идентификатор) стойности ($1, $2)', [токен, потребителски_идентификатор]);
 
       const cookie = `session=${token}; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax; Secure`;
-      return sendJSON(res, 200, { user: user }, { 'Set-Cookie': cookie });
+      връщане на sendJSON(res, 200, { потребител: потребител }, { 'Set-Cookie': cookie });
     }
 
     // ---------- ВХОД ----------
-    if (route === '/api/login' && method === 'POST') {
-      const body = await readBody(req);
-      const email = (body.email || '').trim().toLowerCase();
-      const password = body.password || '';
+    ако (маршрут === '/api/login' && метод === 'POST') {
+      const тяло = изчакване на readBody(req);
+      const имейл = (body.email || '').trim().toLowerCase();
+      const парола = тяло.парола || '';
 
-      const r = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-      const user = r.rows[0];
-      if (!user) return sendJSON(res, 401, { error: 'invalid_credentials' });
+      const r = await pool.query('SELECT * FROM users WHERE email = $1', [имейл]);
+      const потребител = r.rows[0];
+      ако (!потребител) върне sendJSON(res, 401, {грешка: 'невалидни_идентификационни_данни' });
 
-      const ok = await bcrypt.compare(password, user.password_hash);
-      if (!ok) return sendJSON(res, 401, { error: 'invalid_credentials' });
+      const ok = изчакай bcrypt.compare(парола, потребител.hash_на_парола);
+      ако (!ok) върне sendJSON(res, 401, { грешка: 'invalid_credentials' });
 
       const token = crypto.randomBytes(32).toString('hex');
-      await pool.query('INSERT INTO sessions (token, user_id) VALUES ($1, $2)', [token, user.id]);
+      изчакай pool.query('Вмъкни в сесии (токен, потребителски_идентификатор) стойности ($1, $2)', [токен, потребителски_идентификатор]);
 
       const cookie = `session=${token}; HttpOnly; Path=/; Max-Age=2592000; SameSite=Lax; Secure`;
-      return sendJSON(res, 200, {
-        user: { id: user.id, email: user.email, username: user.username, is_pro: user.is_pro }
+      върнете sendJSON(res, 200, {
+        потребител: { id: user.id, имейл: user.email, потребителско име: user.username, is_pro: user.is_pro }
       }, { 'Set-Cookie': cookie });
     }
 
     // ---------- ИЗХОД ----------
-    if (route === '/api/logout' && method === 'POST') {
-      const cookies = parseCookies(req);
-      if (cookies.session) {
-        await pool.query('DELETE FROM sessions WHERE token = $1', [cookies.session]);
+    ако (маршрут === '/api/logout' && метод === 'POST') {
+      const бисквитки = parseCookies(req);
+      ако (бисквитки.сесия) {
+        изчакай pool.query('ИЗТРИВАНЕ ОТ сесии, КЪДЕТО token = $1', [cookies.session]);
       }
-      const cookie = 'session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax; Secure';
-      return sendJSON(res, 200, { ok: true }, { 'Set-Cookie': cookie });
+      const cookie = 'сесия=; Само с Http; Път=/; Максимална възраст=0; SameSite=Lax; Сигурно';
+      връщане на sendJSON(res, 200, { ok: true }, { 'Set-Cookie': cookie });
     }
 
     // ---------- ТЕКУЩ ПОТРЕБИТЕЛ ----------
-    if (route === '/api/me' && method === 'GET') {
-      const user = await getCurrentUser(req);
-      return sendJSON(res, 200, { user: user });
+    ако (маршрут === '/api/me' && метод === 'GET') {
+      const потребител = изчакване getCurrentUser(req);
+      връщане на sendJSON(res, 200, { потребител: потребител });
     }
 
     // ---------- БРОЙ PRO ПОТРЕБИТЕЛИ ----------
-    if (route === '/api/stats' && method === 'GET') {
+    ако (маршрут === '/api/stats' && метод === 'GET') {
       const total = await pool.query('SELECT COUNT(*) FROM users');
       const pro = await pool.query('SELECT COUNT(*) FROM users WHERE is_pro = true');
-      return sendJSON(res, 200, {
-        totalUsers: parseInt(total.rows[0].count),
+      върнете sendJSON(res, 200, {
+        общоПотребители: parseInt(общо.редове[0].брой),
         proUsers: parseInt(pro.rows[0].count)
       });
     }
 
     // ---------- ФУТБОЛНИ ДАННИ ----------
-    if (route === '/api/health') return sendJSON(res, 200, { ok: true, hasKey: !!API_KEY });
+    ако (маршрут === '/api/здраве') върне sendJSON(res, 200, { ok: true, hasKey: !!API_KEY });
 
-    // Временен admin endpoint за нулиране на парола
-    if (route === '/api/admin-reset' && method === 'POST') {
-      const body = await readBody(req);
+    // Временна администраторска крайна точка за нулиране на парола
+    ако (маршрут === '/api/admin-reset' && метод === 'POST') {
+      const тяло = изчакване на readBody(req);
       const secret = body.secret || '';
-      const email = (body.email || '').trim().toLowerCase();
+      const имейл = (body.email || '').trim().toLowerCase();
       const newPass = body.password || '';
-      if (secret !== 'goalmind-admin-2024') return sendJSON(res, 403, { error: 'forbidden' });
-      if (!email || newPass.length < 6) return sendJSON(res, 400, { error: 'invalid' });
-      const hash = await bcrypt.hash(newPass, 10);
-      await pool.query('UPDATE users SET password_hash=$1, is_pro=true WHERE email=$2', [hash, email]);
-      return sendJSON(res, 200, { ok: true, message: 'Password updated and PRO activated' });
+      ако (тайна !== 'goalmind-admin-2024') върне sendJSON(res, 403, {грешка: 'забранено' });
+      ако (!email || newPass.length < 6) върне sendJSON(res, 400, { грешка: 'невалиден' });
+      const хеш = изчакай bcrypt.hash(newPass, 10);
+      await pool.query('АКТУАЛИЗАЦИЯ на потребителите SET password_hash=$1, is_pro=true WHERE email=$2', [хеш, имейл]);
+      връщане на sendJSON(res, 200, { ok: true, съобщение: „Паролата е актуализирана и PRO е активиран“ });
     }
 
     // Тестов endpoint - мачове от стар сезон (за проверка на безплатния план)
-    if (route === '/api/test') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+    ако (маршрут === '/api/test') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
       // Висша лига (league=39), сезон 2021, кръг 1 - достъпно в безплатния план
-      const data = await apiFetch('/fixtures?league=39&season=2021&from=2021-08-13&to=2021-08-16');
-      const matches = (data.response || []).map(simplifyFixture);
-      return sendJSON(res, 200, {
-        info: 'Тестови данни от стар сезон 2021',
-        rawResults: data.results,
-        rawErrors: data.errors,
-        count: matches.length,
-        matches: matches
+      const данни = изчакване apiFetch('/матчи?лига=39&сезон=2021&от=13.08.2021&до=16.08.2021');
+      const съвпадения = (данни.отговор || []).map(опростяващаПриставка);
+      върнете sendJSON(res, 200, {
+        инфо: 'Тестови данни от стар сезон 2021',
+        суровиРезултати: данни.резултати,
+        rawErrors: данни.грешки,
+        брой: съвпадения.дължина,
+        мачове: мачове
       });
     }
 
-    if (route === '/api/live') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const c = getCached('live', 20000); if (c) return sendJSON(res, 200, c);
-      const data = await apiFetch('/fixtures?live=all');
-      const matches = (data.response || []).map(simplifyFixture);
-      const result = { count: matches.length, matches: matches };
-      setCached('live', result); return sendJSON(res, 200, result);
+    ако (маршрут === '/api/live') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const c = getCached('live', 20000); ако (c) върне sendJSON(res, 200, c);
+      const данни = изчакване apiFetch('/оборудване?на живо=всички');
+      const съвпадения = (данни.отговор || []).map(опростяващаПриставка);
+      const резултат = { брой: съвпадения.дължина, съвпадения: съвпадения };
+      setCached('live', резултат); връщане на sendJSON(res, 200, резултат);
     }
-    if (route === '/api/today') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const c = getCached('today', 300000); if (c) return sendJSON(res, 200, c);
-      const today = new Date().toISOString().slice(0,10);
-      const data = await apiFetch('/fixtures?date=' + today);
-      const matches = (data.response || []).map(simplifyFixture);
-      const result = { count: matches.length, matches: matches };
-      setCached('today', result); return sendJSON(res, 200, result);
+    ако (маршрут === '/api/днес') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const c = getCached('днес', 300000); ако (c) върне sendJSON(res, 200, c);
+      const днес = нова Дата().toISOString().slice(0,10);
+      const данни = чакам apiFetch('/fixtures?date=' + днес);
+      const съвпадения = (данни.отговор || []).map(опростяващаПриставка);
+      const резултат = { брой: съвпадения.дължина, съвпадения: съвпадения };
+      setCached('днес', резултат); връщане на sendJSON(res, 200, резултат);
     }
-    if (route === '/api/tomorrow') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const c = getCached('tomorrow', 1800000); if (c) return sendJSON(res, 200, c);
-      const d = new Date(); d.setDate(d.getDate()+1);
-      const data = await apiFetch('/fixtures?date=' + d.toISOString().slice(0,10));
-      const matches = (data.response || []).map(simplifyFixture);
-      const result = { count: matches.length, matches: matches };
-      setCached('tomorrow', result); return sendJSON(res, 200, result);
+    ако (маршрут === '/api/утре') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const c = getCached('утре', 1800000); ако (c) върне sendJSON(res, 200, c);
+      const d = нова Дата(); d.setDate(d.getDate()+1);
+      const данни = изчакване на apiFetch('/fixtures?date=' + d.toISOString().slice(0,10));
+      const съвпадения = (данни.отговор || []).map(опростяващаПриставка);
+      const резултат = { брой: съвпадения.дължина, съвпадения: съвпадения };
+      setCached('утре', резултат); връщане на sendJSON(res, 200, резултат);
     }
 
     // ---------- ПОДРОБНОСТИ ЗА МАЧ (събития + статистика) ----------
-    if (route === '/api/match') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+    ако (маршрут === '/api/съвпадение') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
       // извличаме id директно от req.url (тук няма променлива url)
-      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
+      const reqUrl = нов URL(req.url, 'http://' + req.headers.host);
       const id = reqUrl.searchParams.get('id');
-      if (!id) return sendJSON(res, 400, { error: 'missing_id' });
+      ако (!id) върне sendJSON(res, 400, {грешка: 'missing_id' });
 
       // кеш 20 сек (живите мачове се менят често)
-      const cacheKey = 'match:' + id;
-      const cached = getCached(cacheKey, 20000);
-      if (cached) return sendJSON(res, 200, cached);
+      const cacheKey = 'съвпадение:' + id;
+      const кеширан = getCached(cacheKey, 20000);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
       // основни данни + събития + статистика паралелно
-      const [fxData, evData, statData] = await Promise.all([
-        apiFetch('/fixtures?id=' + id).catch(() => ({ response: [] })),
-        apiFetch('/fixtures/events?fixture=' + id).catch(() => ({ response: [] })),
-        apiFetch('/fixtures/statistics?fixture=' + id).catch(() => ({ response: [] }))
+      const [fxData, evData, statData] = изчакване на Promise.all([
+        apiFetch('/fixtures?id=' + id).catch(() => ({ отговор: [] })),
+        apiFetch('/fixtures/events?fixture=' + id).catch(() => ({ отговор: [] })),
+        apiFetch('/fixtures/statistics?fixture=' + id).catch(() => ({ отговор: [] }))
       ]);
 
       const fx = (fxData.response || [])[0];
-      if (!fx) return sendJSON(res, 404, { error: 'match_not_found' });
+      ако (!fx) върне sendJSON(res, 404, { грешка: 'match_not_found' });
 
-      // Събития (голове, картони, смени) - със защита срещу липсващи полета
-      const events = (evData.response || []).map(e => {
-        const time = e.time || {};
+      // Събития (голове, картони, смени) - срещу защита на липсващи полета
+      const събития = (evData.response || []).map(e => {
+        константно време = e.време || {};
         const team = e.team || {};
-        return {
-          minute: time.elapsed != null ? time.elapsed : null,
-          extra: time.extra != null ? time.extra : null,
-          type: e.type || '',
-          detail: e.detail || '',
-          team: team.name || '',
+        връщане {
+          минута: време.изминало != null ? време.изминало : null,
+          допълнително: време.допълнително != null ? време.допълнително : null,
+          тип: e.type || '',
+          детайл: e.detail || '',
+          екип: име.на.екип || '',
           teamId: team.id || null,
-          player: e.player ? e.player.name : null,
-          assist: e.assist ? e.assist.name : null
+          играч: e.player ? e.player.name : null,
+          асистент: e.assist ? e.assist.name : null
         };
       });
 
-      // Статистика по отбор -> правим я лесна за ползване (със защита)
-      const stats = {};
+      // Статистика по отбор -> правя я лесна за ползване (със защита)
+      константни статистики = {};
       (statData.response || []).forEach(teamStat => {
-        if (!teamStat || !teamStat.team) return;
+        ако (!teamStat || !teamStat.team) върне;
         const tid = teamStat.team.id;
-        stats[tid] = {};
-        (teamStat.statistics || []).forEach(s => {
-          if (s && s.type != null) stats[tid][s.type] = s.value;
+        статистика[tid] = {};
+        (teamStat.статистика || []).forEach(s => {
+          ако (s && s.тип != null) статистика[tid][s.тип] = s.стойност;
         });
       });
 
       // Владение като числа (за сянката)
-      const teams = fx.teams || {};
+      const отбори = fx.отбори || {};
       const homeTeam = teams.home || {};
       const awayTeam = teams.away || {};
       const homeId = homeTeam.id;
       const awayId = awayTeam.id;
-      const goals = fx.goals || {};
+      const цели = fx.цели || {};
       const fixture = fx.fixture || {};
-      const status = fixture.status || {};
-      const league = fx.league || {};
+      const статус = fixture.status || {};
+      const лига = fx.лига || {};
 
       const parsePoss = (v) => {
-        if (v == null) return null;
+        ако (v == null) връща null;
         const n = parseInt(String(v).replace('%', ''));
-        return isNaN(n) ? null : n;
+        връщане isNaN(n) ? null : n;
       };
-      let homePoss = stats[homeId] ? parsePoss(stats[homeId]['Ball Possession']) : null;
-      let awayPoss = stats[awayId] ? parsePoss(stats[awayId]['Ball Possession']) : null;
+      нека homePoss = stats[homeId] ? parsePoss(stats[homeId]['Притежание на топката']) : null;
+      let awayPoss = stats[awayId] ? parsePoss(stats[awayId]['Притежание на топката']) : null;
 
-      const result = {
-        id: fixture.id,
-        league: league.name || '',
-        status: status.short || '',
-        elapsed: status.elapsed != null ? status.elapsed : null,
-        home: { id: homeId, name: homeTeam.name || '', logo: homeTeam.logo || '', goals: goals.home != null ? goals.home : 0, possession: homePoss },
-        away: { id: awayId, name: awayTeam.name || '', logo: awayTeam.logo || '', goals: goals.away != null ? goals.away : 0, possession: awayPoss },
-        events: events,
-        stats: { home: stats[homeId] || {}, away: stats[awayId] || {} }
+      константен резултат = {
+        идентификатор: fixture.id,
+        лига: име.на.лига || '',
+        статус: status.short || '',
+        изтекло: status.elapsed != null ? status.elapsed : null,
+        начало: { id: homeId, име: homeTeam.name || '', лого: homeTeam.logo || '', цели: goals.home != null ? goals.home : 0, владение: homePoss },
+        гост: { id: awayId, име: awayTeam.name || '', лого: awayTeam.logo || '', цели: goals.away != null ? goals.away : 0, владение: awayPoss },
+        събития: събития,
+        статистика: { начало: статистика[homeId] || {}, гост: статистика[awayId] || {} }
       };
-      setCached(cacheKey, result);
-      return sendJSON(res, 200, result);
+      setCached(кешКлюч, резултат);
+      връщане на sendJSON(res, 200, резултат);
     }
 
     // ---------- ЛИГИ С ЖИВИ МАЧОВЕ (за филтъра) ----------
-    if (route === '/api/leagues-live') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const cached = getCached('leagues-live', 30000);
-      if (cached) return sendJSON(res, 200, cached);
-      const data = await apiFetch('/fixtures?live=all');
-      const matches = (data.response || []).map(simplifyFixture);
+    ако (маршрут === '/api/leagues-live') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const cached = getCached('лиги-на живо', 30000);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
+      const данни = изчакване apiFetch('/оборудване?на живо=всички');
+      const съвпадения = (данни.отговор || []).map(опростяващаПриставка);
       // групираме по лига
-      const leaguesMap = {};
-      matches.forEach(m => {
-        if (m.leagueId == null) return;
-        if (!leaguesMap[m.leagueId]) {
-          leaguesMap[m.leagueId] = { id: m.leagueId, name: m.league, flag: m.flag, count: 0 };
+      const КартаНаЛиги = {};
+      съвпадения.заВсеки(m => {
+        ако (m.leagueId == null) върне;
+        ако (!leaguesMap[m.leagueId]) {
+          leaguesMap[m.leagueId] = { id: m.leagueId, име: m.league, флаг: m.flag, брой: 0 };
         }
-        leaguesMap[m.leagueId].count++;
+        КартаНаЛиги[m.leagueId].count++;
       });
-      const leagues = Object.values(leaguesMap).sort((a, b) => b.count - a.count);
-      const result = { total: matches.length, leagues: leagues };
-      setCached('leagues-live', result);
-      return sendJSON(res, 200, result);
+      const лиги = Object.values(leaguesMap).sort((a, b) => b.count - a.count);
+      const резултат = { общо: мачове.дължина, лиги: лиги };
+      setCached('лиги-на живо', резултат);
+      връщане на sendJSON(res, 200, резултат);
     }
 
     // ---------- ПОСЕЩЕНИЯ ПО ДЪРЖАВИ + PRO АКАУНТИ ----------
-    if (route === '/api/visits') {
-      try {
-        const visitsRes = await pool.query(
-          'SELECT country_code, country_name, count FROM visits ORDER BY count DESC LIMIT 12'
+    ако (маршрут === '/api/посещения') {
+      опитай {
+        const visitsRes = изчакване на pool.query(
+          „SELECT код_на_държава, име_на_държава, брой FROM посещения ORDER BY брой DESC LIMIT 12“
         );
-        const totalRes = await pool.query('SELECT COALESCE(SUM(count),0) AS total FROM visits');
+        const totalRes = await pool.query('SELECT COALESCE(SUM(брой),0) AS total FROM посещения');
         const proRes = await pool.query('SELECT COUNT(*) AS pro FROM users WHERE is_pro = true');
-        return sendJSON(res, 200, {
-          countries: visitsRes.rows,
-          total: parseInt(totalRes.rows[0].total) || 0,
+        върнете sendJSON(res, 200, {
+          държави: посещения.редове,
+          общо: parseInt(totalRes.rows[0].total) || 0,
           proAccounts: parseInt(proRes.rows[0].pro) || 0
         });
-      } catch (err) {
-        return sendJSON(res, 200, { countries: [], total: 0, proAccounts: 0 });
+      } улов (грешка) {
+        връщане на sendJSON(res, 200, { държави: [], общо: 0, proAccounts: 0 });
       }
     }
 
     // ---------- ПОДСКАЗВАЧ: търсене на отбори по име ----------
-    if (route === '/api/search-team') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
+    ако (маршрут === '/api/екип-за-търсене') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const reqUrl = нов URL(req.url, 'http://' + req.headers.host);
       const q = (reqUrl.searchParams.get('q') || '').trim();
-      if (q.length < 3) return sendJSON(res, 200, { teams: [] });
+      ако (q.length < 3) върне sendJSON(res, 200, { екипи: [] });
 
-      const cacheKey = 'search:' + q.toLowerCase();
+      const cacheKey = 'търсене:' + q.toLowerCase();
       const cached = getCached(cacheKey, 3600000); // 1 час
-      if (cached) return sendJSON(res, 200, cached);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
-      try {
-        const data = await apiFetch('/teams?search=' + encodeURIComponent(q));
+      опитай {
+        const данни = изчакване на apiFetch('/отбори?търсене=' + encodeURIComponent(q));
         const teams = (data.response || []).slice(0, 8).map(t => ({
-          name: t.team.name,
-          logo: t.team.logo,
-          country: t.team.country
+          име: t.team.name,
+          лого: t.team.logo,
+          държава: t.team.country
         }));
-        const result = { teams: teams };
-        setCached(cacheKey, result);
-        return sendJSON(res, 200, result);
-      } catch (err) {
-        return sendJSON(res, 200, { teams: [] });
+        const резултат = { отбори: отбори };
+        setCached(кешКлюч, резултат);
+        връщане на sendJSON(res, 200, резултат);
+      } улов (грешка) {
+        връщане на sendJSON(res, 200, { екипи: [] });
       }
     }
 
     // ---------- СТАТИСТИКА ЗА ЕДИН ОТБОР ----------
-    if (route === '/api/team-stats' && method === 'POST') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const body = await readBody(req);
-      const teamName = (body.team || '').trim();
-      if (!teamName) return sendJSON(res, 400, { error: 'no_team' });
+    ако (маршрут === '/api/team-stats' && метод === 'POST') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const тяло = изчакване на readBody(req);
+      const ИмеНаЕкип = (body.ekip || '').trim();
+      ако (!teamName) върне sendJSON(res, 400, {грешка: 'no_team' });
 
       const cacheKey = 'teamstats:' + teamName.toLowerCase();
       const cached = getCached(cacheKey, 600000); // 10 мин
-      if (cached) return sendJSON(res, 200, cached);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
       // намираме отбора
-      const team = await findTeam(teamName);
-      if (!team) return sendJSON(res, 404, { error: 'team_not_found' });
+      const team = изчакване findTeam(имеНаТеам);
+      ако (!ekip) върне sendJSON(res, 404, {грешка: 'ekip_not_found' });
 
-      // взимаме формата от последните 10 мача
-      const form = await getTeamForm(team.id, 10);
+      // взимаме формат от последните 10 мача
+      const форма = изчакай getTeamForm(team.id, 10);
 
-      const result = {
-        team: { id: team.id, name: team.name, logo: team.logo, country: team.country, founded: team.founded },
-        stats: {
-          played: form.played,
-          wins: form.wins,
-          draws: form.draws,
-          losses: form.losses,
-          goalsFor: form.goalsFor,
-          goalsAgainst: form.goalsAgainst,
+      константен резултат = {
+        екип: { id: team.id, име: team.name, лого: team.logo, държава: team.country, основан: team.founded },
+        статистика: {
+          свири: форма.свири,
+          победи: форма.победи,
+          рисува: form.draws,
+          загуби: форма.загуби,
+          целиЗа: форма.целиЗа,
+          целиСрещу: форма.целиСрещу,
           goalDiff: form.goalsFor - form.goalsAgainst,
-          avgScored: Math.round(form.avgScored * 100) / 100,
-          avgConceded: Math.round(form.avgConceded * 100) / 100,
-          form: form.form,
-          points: form.points
+          среденРезултат: Math.round(form.среденРезултат * 100) / 100,
+          средноОтстъпено: Math.round(form.средноОтстъпено * 100) / 100,
+          форма: форма.форма,
+          точки: форма.точки
         },
-        recent: form.recent
+        скорошни: form.recent
       };
-      setCached(cacheKey, result);
-      return sendJSON(res, 200, result);
+      setCached(кешКлюч, резултат);
+      връщане на sendJSON(res, 200, резултат);
     }
 
     // ---------- AI ПРОГНОЗА (безплатна формула) ----------
     // ---------- ДИРЕКТНИ СРЕЩИ (H2H) ----------
-    if (route === '/api/h2h' && method === 'POST') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const body = await readBody(req);
+    ако (маршрут === '/api/h2h' && метод === 'POST') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const тяло = изчакване на readBody(req);
       const homeName = (body.home || '').trim();
       const awayName = (body.away || '').trim();
-      if (!homeName || !awayName) return sendJSON(res, 400, { error: 'missing_teams' });
+      ако (!homeName || !awayName) върне sendJSON(res, 400, { грешка: 'missing_teams' });
 
       const cacheKey = 'h2h:' + homeName.toLowerCase() + ':' + awayName.toLowerCase();
-      const cached = getCached(cacheKey, 600000);
-      if (cached) return sendJSON(res, 200, cached);
+      const кеширан = getCached(кешКейч, 600000);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
-      const team1 = await findTeam(homeName);
-      if (!team1) return sendJSON(res, 404, { error: 'home_not_found', name: homeName });
-      const team2 = await findTeam(awayName);
-      if (!team2) return sendJSON(res, 404, { error: 'away_not_found', name: awayName });
+      const team1 = изчакване findTeam(началноИме);
+      ако (!team1) върне sendJSON(res, 404, { грешка: 'home_not_found', име: homeName });
+      const team2 = изчакване findTeam(awayName);
+      ако (!team2) върне sendJSON(res, 404, { грешка: 'away_not_found', име: awayName });
 
-      const h2h = await getH2H(team1.id, team2.id, 10);
-      const result = {
-        team1: { id: team1.id, name: team1.name, logo: team1.logo },
-        team2: { id: team2.id, name: team2.name, logo: team2.logo },
-        h2h: h2h
+      const h2h = изчакване getH2H(team1.id, team2.id, 10);
+      константен резултат = {
+        отбор1: { id: team1.id, име: team1.name, лого: team1.logo },
+        отбор2: { id: team2.id, име: team2.name, лого: team2.logo },
+        ч2ч: ч2ч
       };
-      setCached(cacheKey, result);
-      return sendJSON(res, 200, result);
+      setCached(кешКлюч, резултат);
+      връщане на sendJSON(res, 200, резултат);
     }
 
     // ---------- ГОЛОВА СТАТИСТИКА ----------
-    if (route === '/api/goals' && method === 'POST') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const body = await readBody(req);
-      const teamName = (body.team || '').trim();
-      if (!teamName) return sendJSON(res, 400, { error: 'no_team' });
+    ако (маршрут === '/api/цели' && метод === 'POST') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const тяло = изчакване на readBody(req);
+      const ИмеНаЕкип = (body.ekip || '').trim();
+      ако (!teamName) върне sendJSON(res, 400, {грешка: 'no_team' });
 
-      const cacheKey = 'goals:' + teamName.toLowerCase();
-      const cached = getCached(cacheKey, 600000);
-      if (cached) return sendJSON(res, 200, cached);
+      const cacheKey = 'цели:' + teamName.toLowerCase();
+      const кеширан = getCached(кешКейч, 600000);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
-      const team = await findTeam(teamName);
-      if (!team) return sendJSON(res, 404, { error: 'team_not_found' });
+      const team = изчакване findTeam(имеНаТеам);
+      ако (!ekip) върне sendJSON(res, 404, {грешка: 'ekip_not_found' });
 
-      // последните 10 мача за голов анализ
-      const data = await apiFetch('/fixtures?team=' + team.id + '&last=10');
+      // последните 10 мача за анализ на главата
+      const данни = чакам apiFetch('/fixtures?team=' + team.id + '&last=10');
       const fixtures = data.response || [];
-      let over25 = 0, under25 = 0, btts = 0, cleanSheets = 0, failedToScore = 0;
-      let totalGoals = 0, scoredFirst = 0, counted = 0;
+      нека над25 = 0, под25 = 0, btts = 0, cleanSheets = 0, failedToScore = 0;
+      нека totalGoals = 0, scoredFirst = 0, counted = 0;
 
       fixtures.forEach(f => {
         const isHome = f.teams.home.id === team.id;
         const gf = isHome ? f.goals.home : f.goals.away;
         const ga = isHome ? f.goals.away : f.goals.home;
-        if (gf == null || ga == null) return;
-        counted++;
-        const matchGoals = gf + ga;
-        totalGoals += matchGoals;
-        if (matchGoals > 2.5) over25++; else under25++;
-        if (gf > 0 && ga > 0) btts++;
-        if (ga === 0) cleanSheets++;
-        if (gf === 0) failedToScore++;
+        ако (gf == null || ga == null) връщане;
+        преброени++;
+        const съвпадениеЦели = gf + ga;
+        общоЦели += съвпадениеЦели;
+        ако (matchGoals > 2.5) над25++; иначе под25++;
+        ако (gf > 0 &ga > 0) btts++;
+        ако (ga === 0) cleanSheets++;
+        ако (gf === 0) неуспешноОценяване++;
       });
 
-      const pct = (n) => counted ? Math.round((n / counted) * 100) : 0;
-      const result = {
-        team: { id: team.id, name: team.name, logo: team.logo, country: team.country },
-        goals: {
-          played: counted,
-          avgTotal: counted ? Math.round((totalGoals / counted) * 100) / 100 : 0,
-          over25: pct(over25), under25: pct(under25),
+      const pct = (n) => преброени ? Math.round((n / преброени) * 100) : 0;
+      константен резултат = {
+        отбор: { id: team.id, име: team.name, лого: team.logo, държава: team.country },
+        цели: {
+          изиграно: преброено,
+          avgTotal: преброени ? Math.round((общоГолове / преброени) * 100) / 100 : 0,
+          над 25: процент (над 25), под 25: процент (под 25),
           btts: pct(btts), cleanSheets: pct(cleanSheets),
-          failedToScore: pct(failedToScore)
+          неуспешноОценяване: pct(неуспешноОценяване)
         }
       };
-      setCached(cacheKey, result);
-      return sendJSON(res, 200, result);
+      setCached(кешКлюч, резултат);
+      връщане на sendJSON(res, 200, резултат);
     }
 
     // ---------- КОЕФИЦИЕНТИ ----------
-    if (route === '/api/odds') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
-      const fixtureId = reqUrl.searchParams.get('fixture');
-      if (!fixtureId) return sendJSON(res, 400, { error: 'missing_fixture' });
+    ако (маршрут === '/api/коефициенти') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const reqUrl = нов URL(req.url, 'http://' + req.headers.host);
+      const fixtureId = reqUrl.searchParams.get('приспособление');
+      ако (!fixtureId) върне sendJSON(res, 400, { грешка: 'missing_fixture' });
 
-      const cacheKey = 'odds:' + fixtureId;
+      const cacheKey = 'коефициенти:' + fixtureId;
       const cached = getCached(cacheKey, 300000); // 5 мин
-      if (cached) return sendJSON(res, 200, cached);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
-      try {
-        const data = await apiFetch('/odds?fixture=' + fixtureId);
-        const resp = (data.response || [])[0];
-        if (!resp || !resp.bookmakers || resp.bookmakers.length === 0) {
-          return sendJSON(res, 200, { available: false });
+      опитай {
+        const данни = изчакване на apiFetch('/коефициенти?фикстура=' + фикстураИд);
+        const отговор = (данни.отговор || [])[0];
+        ако (!resp || !resp.bookmakers || resp.bookmakers.length === 0) {
+          връщане на sendJSON(res, 200, { налично: false });
         }
-        // взимаме първия букмейкър и пазара "Match Winner"
-        const bm = resp.bookmakers[0];
-        const matchWinner = (bm.bets || []).find(b => b.name === 'Match Winner');
-        let odds = null;
-        if (matchWinner) {
-          const vals = matchWinner.values || [];
-          odds = {
-            home: (vals.find(v => v.value === 'Home') || {}).odd || null,
-            draw: (vals.find(v => v.value === 'Draw') || {}).odd || null,
-            away: (vals.find(v => v.value === 'Away') || {}).odd || null
+        // вземаме първия букмейкър и пазар "Match Winner"
+        const bm = съответно.букмейкъри[0];
+        const ПобедителВМача = (bm.bets || []).find(b => b.name === 'Победител в Мача');
+        нека коефициентите = null;
+        ако (matchWinner) {
+          const vals = matchWinner.values ​​|| [];
+          коефициенти = {
+            начало: (vals.find(v => v.value === 'Начало') || {}).odd || null,
+            рисуване: (vals.find(v => v.value === 'Рисуване') || {}).odd || null,
+            далеч: (vals.find(v => v.value === 'Далеч') || {}).odd || null
           };
         }
-        const result = { available: !!odds, bookmaker: bm.name, odds: odds };
-        setCached(cacheKey, result);
-        return sendJSON(res, 200, result);
-      } catch (err) {
-        return sendJSON(res, 200, { available: false });
+        const резултат = { налично: !!коефициенти, букмейкър: bm.name, коефициенти: коефициенти };
+        setCached(кешКлюч, резултат);
+        връщане на sendJSON(res, 200, резултат);
+      } улов (грешка) {
+        връщане на sendJSON(res, 200, { налично: false });
       }
     }
 
     // ---------- КОНТУЗИИ ----------
-    if (route === '/api/injuries') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const reqUrl = new URL(req.url, 'http://' + req.headers.host);
-      const fixtureId = reqUrl.searchParams.get('fixture');
-      if (!fixtureId) return sendJSON(res, 400, { error: 'missing_fixture' });
+    ако (маршрут === '/api/injuries') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const reqUrl = нов URL(req.url, 'http://' + req.headers.host);
+      const fixtureId = reqUrl.searchParams.get('приспособление');
+      ако (!fixtureId) върне sendJSON(res, 400, { грешка: 'missing_fixture' });
 
-      const cacheKey = 'injuries:' + fixtureId;
-      const cached = getCached(cacheKey, 600000);
-      if (cached) return sendJSON(res, 200, cached);
+      const cacheKey = 'травми:' + fixtureId;
+      const кеширан = getCached(кешКейч, 600000);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
-      try {
-        const data = await apiFetch('/injuries?fixture=' + fixtureId);
-        const players = (data.response || []).map(i => ({
-          player: i.player ? i.player.name : '',
-          team: i.team ? i.team.name : '',
-          reason: i.player ? i.player.reason : '',
-          type: i.player ? i.player.type : ''
+      опитай {
+        const данни = чакам apiFetch('/injuries?fixture=' + fixtureId);
+        const играчи = (данни.отговор || []).map(i => ({
+          играч: i.player ? i.player.name : '',
+          отбор: i.team ? i.team.name : '',
+          причина: i.player ? i.player.причина : '',
+          тип: i.player ? i.player.type : ''
         }));
-        const result = { count: players.length, players: players };
-        setCached(cacheKey, result);
-        return sendJSON(res, 200, result);
-      } catch (err) {
-        return sendJSON(res, 200, { count: 0, players: [] });
+        const резултат = { брой: играчи.дължина, играчи: играчи };
+        setCached(кешКлюч, резултат);
+        връщане на sendJSON(res, 200, резултат);
+      } улов (грешка) {
+        връщане на sendJSON(res, 200, {брой: 0, играчи: [] });
       }
     }
 
-    if (route === '/api/predict' && method === 'POST') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const body = await readBody(req);
+    ако (маршрут === '/api/predict' && метод === 'POST') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const тяло = изчакване на readBody(req);
       const homeName = (body.home || '').trim();
       const awayName = (body.away || '').trim();
-      if (!homeName || !awayName) return sendJSON(res, 400, { error: 'missing_teams' });
+      ако (!homeName || !awayName) върне sendJSON(res, 400, { грешка: 'missing_teams' });
 
       // кеш по двойката отбори (за 10 мин), за да пестим заявки
-      const cacheKey = 'predict:' + homeName.toLowerCase() + ':' + awayName.toLowerCase();
-      const cached = getCached(cacheKey, 600000);
-      if (cached) return sendJSON(res, 200, cached);
+      const cacheKey = 'предсказване:' + homeName.toLowerCase() + ':' + awayName.toLowerCase();
+      const кеширан = getCached(кешКейч, 600000);
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
       // 1) Намираме двата отбора
-      const homeTeam = await findTeam(homeName);
-      if (!homeTeam) return sendJSON(res, 404, { error: 'home_not_found', name: homeName });
-      const awayTeam = await findTeam(awayName);
-      if (!awayTeam) return sendJSON(res, 404, { error: 'away_not_found', name: awayName });
+      const домашенЕкип = изчакване на намиранеЕкип(имеНаКупване);
+      ако (!homeTeam) върне sendJSON(res, 404, { грешка: 'home_not_found', име: homeName });
+      const awayTeam = изчакване на findTeam(awayName);
+      ако (!awayTeam) върне sendJSON(res, 404, { грешка: 'away_not_found', име: awayName });
 
       // 2) Тегли форма и директни срещи
-      const [homeForm, awayForm, h2h] = await Promise.all([
-        getTeamForm(homeTeam.id, 5),
+      const[homeForm, awayForm, h2h] = await Promise.all([
+        getTeamForm(началенTeam.id, 5),
         getTeamForm(awayTeam.id, 5),
         getH2H(homeTeam.id, awayTeam.id, 5)
       ]);
 
       // 3) Смятаме прогнозата (с обучените тежести)
-      const weights = await getWeights();
-      const prediction = computePrediction(
-        Object.assign({ name: homeTeam.name }, homeForm),
-        Object.assign({ name: awayTeam.name }, awayForm),
-        h2h,
-        weights
+      const тегла = изчакване getWeights();
+      константна прогноза = изчислиПредположение(
+        Object.assign({ име: homeTeam.name }, homeForm),
+        Object.assign({ име: awayTeam.name }, awayForm),
+        ч2ч,
+        тежести
       );
 
-      const result = {
-        home: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo, country: homeTeam.country, form: homeForm },
-        away: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo, country: awayTeam.country, form: awayForm },
-        h2h: h2h,
-        prediction: prediction
+      константен резултат = {
+        начало: { id: homeTeam.id, име: homeTeam.name, лого: homeTeam.logo, държава: homeTeam.country, форма: homeForm },
+        гост: { id: awayTeam.id, име: awayTeam.name, лого: awayTeam.logo, държава: awayTeam.country, форма: awayForm },
+        ч2ч: ч2ч,
+        прогноза: прогноза
       };
-      setCached(cacheKey, result);
+      setCached(кешКлюч, резултат);
       // проверяваме минали мачове за самообучение (фоново)
-      checkAndLearn();
-      return sendJSON(res, 200, result);
+      провериИНаучи();
+      връщане на sendJSON(res, 200, резултат);
     }
 
     // ---------- МОИТЕ ПРОГНОЗИ (реална статистика на AI) ----------
-    if (route === '/api/my-predictions') {
-      try {
+    ако (маршрут === '/api/моите-предсказания') {
+      опитай {
         const w = await pool.query('SELECT total_checked, total_correct FROM ai_weights WHERE id = 1');
-        const total = w.rows[0] ? w.rows[0].total_checked : 0;
+        const общо = w.rows[0] ? w.rows[0].total_checked : 0;
         const correct = w.rows[0] ? w.rows[0].total_correct : 0;
-        const accuracy = total > 0 ? Math.round((correct / total) * 1000) / 10 : 0;
+        const точност = общо > 0 ? Math.round((правилно / общо) * 1000) / 10 : 0;
 
         // тази седмица
-        const week = await pool.query(
+        const седмица = чакам pool.query(
           `SELECT COUNT(*) FILTER (WHERE correct = true) AS correct, COUNT(*) AS total
-           FROM predictions WHERE checked = true AND created_at > NOW() - INTERVAL '7 days'`
+           ОТ прогнози КЪДЕТО е проверено = true AND създадено_в > NOW() - ИНТЕРВАЛ '7 дни'`
         );
         const weekCorrect = parseInt(week.rows[0].correct) || 0;
-        const weekTotal = parseInt(week.rows[0].total) || 0;
+        const ОбщоЗаСедмица = parseInt(седмица.редове[0].общо) || 0;
 
         // серия (последователни познати)
-        const recent = await pool.query(
+        const скорошни = чакам pool.query(
           `SELECT correct FROM predictions WHERE checked = true ORDER BY match_date DESC LIMIT 20`
         );
-        let streak = 0;
-        for (const row of recent.rows) {
-          if (row.correct) streak++; else break;
+        нека ивица = 0;
+        за (const ред от recent.rows) {
+          ако (row.correct) streak++; иначе break;
         }
 
-        return sendJSON(res, 200, {
-          weekCorrect, weekTotal,
-          totalChecked: total, totalCorrect: correct, accuracy,
-          streak
+        върнете sendJSON(res, 200, {
+          седмицаТочно, седмицаОбщо,
+          totalChecked: общо, totalCorrect: правилно, точност,
+          ивица
         });
-      } catch (e) {
-        return sendJSON(res, 200, { weekCorrect: 0, weekTotal: 0, totalChecked: 0, totalCorrect: 0, accuracy: 0, streak: 0 });
+      } улов (e) {
+        връщане на sendJSON(res, 200, { weekCorrect: 0, weekTotal: 0, totalChecked: 0, totalCorrect: 0, accuracy: 0, streak: 0 });
       }
     }
 
     // ---------- СИГУРНИ ЗАЛОЗИ (висока увереност, предстоящи + живи) ----------
-    if (route === '/api/sure-bets') {
-      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const cached = getCached('sure-bets', 300000); // 5 мин
-      if (cached) return sendJSON(res, 200, cached);
+    ако (маршрут === '/api/сигурни-залози') {
+      ако (!API_KEY) върне sendJSON(res, 500, {грешка: 'no_key' });
+      const cached = getCached('сигурни-залози', 300000); // 5 мин
+      ако (кеширано) върне sendJSON(res, 200, кеширано);
 
-      try {
-        const weights = await getWeights();
-        // взимаме живи + днешни мачове
-        const [liveData, todayData] = await Promise.all([
-          apiFetch('/fixtures?live=all').catch(() => ({ response: [] })),
-          apiFetch('/fixtures?date=' + new Date().toISOString().slice(0,10)).catch(() => ({ response: [] }))
+      опитай {
+        const тегла = изчакване getWeights();
+        // вземаме живи + днешни мачове
+        const[liveData, todayData] = изчакване Promise.all([
+          apiFetch('/fixtures?live=all').catch(() => ({ отговор: [] })),
+          apiFetch('/fixtures?date=' + new Date().toISOString().slice(0,10)).catch(() => ({ отговор: [] }))
         ]);
-        let fixtures = [...(liveData.response || []), ...(todayData.response || [])];
-        // махаме дубликати по id
-        const seen = {};
-        fixtures = fixtures.filter(f => { if (seen[f.fixture.id]) return false; seen[f.fixture.id] = 1; return true; });
+        нека фиксиращи устройства = [...(liveData.response || []), ...(todayData.response || [])];
+        // махаме да публикувате по id
+        константа се вижда = {};
+        фиксиращи елементи = фиксиращи елементи.филтър(f => { ако (seen[f.fixture.id]) върне false; seen[f.fixture.id] = 1; върне true; });
         // ограничаваме до 25 за да не правим твърде много заявки
-        fixtures = fixtures.slice(0, 25);
+        фиксиращи елементи = фиксиращи елементи.slice(0, 25);
 
         const sureBets = [];
-        for (const f of fixtures) {
-          const status = f.fixture.status.short;
+        за (const f от приспособленията) {
+          const статус = f.fixture.status.short;
           // само предстоящи или живи (не свършили)
-          if (['FT','AET','PEN','PST','CANC'].includes(status)) continue;
-          try {
+          ако (['FT','AET','PEN','PST','CANC'].includes(статус)) продължи;
+          опитай {
             const [hForm, aForm] = await Promise.all([
               getTeamForm(f.teams.home.id, 5),
               getTeamForm(f.teams.away.id, 5)
             ]);
             const pred = computePrediction(
-              Object.assign({ name: f.teams.home.name }, hForm),
-              Object.assign({ name: f.teams.away.name }, aForm),
-              null, weights
+              Object.assign({ име: f.teams.home.name }, hForm),
+              Object.assign({ име: f.teams.away.name }, aForm),
+              нула, тегла
             );
             // "сигурен" = увереност >= 60% и достатъчно данни
-            if (pred.confidence >= 60 && hForm.played >= 3 && aForm.played >= 3) {
-              const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(status);
+            ако (pred.confidence >= 60 && hForm.played >= 3 && aForm.played >= 3) {
+              const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(статус);
               sureBets.push({
-                fixtureId: f.fixture.id,
-                league: f.league.name, flag: f.league.flag,
-                home: f.teams.home.name, away: f.teams.away.name,
-                homeLogo: f.teams.home.logo, awayLogo: f.teams.away.logo,
-                date: f.fixture.date, isLive,
-                pick: pred.pick, pickType: pred.pickType,
-                confidence: pred.confidence,
-                homePct: pred.homePct, drawPct: pred.drawPct, awayPct: pred.awayPct
+                идентификатор на фиксиращ елемент: f.fixture.id,
+                лига: f.league.name, флаг: f.league.flag,
+                домакин: f.teams.home.name, гост: f.teams.away.name,
+                homeЛого: f.teams.home.logo, awayЛого: f.teams.away.logo,
+                дата: f.fixture.date, isLive,
+                избор: предвар.избор, тип избор: предвар.тип избор,
+                увереност: предварителна увереност,
+                домашенПкт: пред.домашенПкт, тегленеПкт: пред.тегленеПкт, гостенПкт: пред.гостенПкт
               });
               // записваме прогнозата за самообучение
               savePrediction(f.fixture.id, f.teams.home.name, f.teams.away.name, f.league.name, f.fixture.date, pred);
             }
-          } catch (e) { continue; }
-          if (sureBets.length >= 10) break; // максимум 10
+          } catch (e) { продължи; }
+          if (sureBets.length >= 10) прекъсване; // максимум 10
         }
         // подреждаме по увереност
-        sureBets.sort((a, b) => b.confidence - a.confidence);
-        const result = { count: sureBets.length, bets: sureBets };
-        setCached('sure-bets', result);
-        checkAndLearn();
-        return sendJSON(res, 200, result);
-      } catch (e) {
-        return sendJSON(res, 200, { count: 0, bets: [] });
+        sureBets.sort((a, b) => b.доверие - a.доверие);
+        const резултат = { брой: sureBets.length, залози: sureBets };
+        setCached('сигурни-залози', резултат);
+        провериИНаучи();
+        връщане на sendJSON(res, 200, резултат);
+      } улов (e) {
+        връщане на sendJSON(res, 200, {брой: 0, залози: [] });
       }
     }
 
-    return sendJSON(res, 404, { error: 'not_found' });
-  } catch (err) {
+    връщане на sendJSON(res, 404, {грешка: 'not_found' });
+  } улов (грешка) {
     console.error('API грешка (' + route + '):', err.message);
-    return sendJSON(res, 500, { error: 'server_error' });
+    връщане на sendJSON(res, 500, { грешка: 'server_error' });
   }
 }
 
-// ============================================================
-//   Стартиране на сървъра
-// ============================================================
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url, 'http://' + req.headers.host);
-  const route = url.pathname;
-  if (route.startsWith('/api/')) { handleApi(req, res, route, req.method); return; }
+// ==================================================================
+// Стартиране на сървъра
+// ==================================================================
+const сървър = http.createServer((req, res) => {
+  const url = нов URL(req.url, 'http://' + req.headers.host);
+  const маршрут = url.път;
+  ако (route.startsWith('/api/')) { handleApi(req, res, route, req.method); return; }
   // броим посещение само при зареждане на главната страница
-  if (route === '/' || route === '/index.html') {
+  ако (маршрут === '/' || маршрут === '/index.html') {
     recordVisit(req); // не чакаме - върви фоново
   }
-  let filePath = path.join(PUBLIC_DIR, route === '/' ? 'index.html' : route);
-  if (!filePath.startsWith(PUBLIC_DIR)) filePath = path.join(PUBLIC_DIR, 'index.html');
+  нека filePath = path.join(PUBLIC_DIR, маршрут === '/' ? 'index.html' : маршрут);
+  ако (!filePath.startsWith(PUBLIC_DIR)) filePath = път.присъединяване(PUBLIC_DIR, 'index.html');
   serveStatic(res, filePath);
 });
 
 initDatabase().then(() => {
-  server.listen(PORT, () => {
+  сървър.listen(ПОРТ, () => {
     console.log('GoalMind сървърът работи на порт ' + PORT);
-    if (!API_KEY) console.warn('⚠️  Липсва API_FOOTBALL_KEY');
-    if (!process.env.DATABASE_URL) console.warn('⚠️  Липсва DATABASE_URL');
+    if (!API_KEY) console.warn('⚠️ Липсва API_FOOTBALL_KEY');
+    ако (!process.env.URL_НА_БАЗАТА_ДАННИ) console.warn('⚠️ Изгубен URL_НА_БАЗА_ДАННИ');
   });
 });
