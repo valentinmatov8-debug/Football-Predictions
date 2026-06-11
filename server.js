@@ -509,6 +509,19 @@ async function handleApi(req, res, route, method) {
     // ---------- ФУТБОЛНИ ДАННИ ----------
     if (route === '/api/health') return sendJSON(res, 200, { ok: true, hasKey: !!API_KEY });
 
+    // Временен admin endpoint за нулиране на парола
+    if (route === '/api/admin-reset' && method === 'POST') {
+      const body = await readBody(req);
+      const secret = body.secret || '';
+      const email = (body.email || '').trim().toLowerCase();
+      const newPass = body.password || '';
+      if (secret !== 'goalmind-admin-2024') return sendJSON(res, 403, { error: 'forbidden' });
+      if (!email || newPass.length < 6) return sendJSON(res, 400, { error: 'invalid' });
+      const hash = await bcrypt.hash(newPass, 10);
+      await pool.query('UPDATE users SET password_hash=$1, is_pro=true WHERE email=$2', [hash, email]);
+      return sendJSON(res, 200, { ok: true, message: 'Password updated and PRO activated' });
+    }
+
     // Тестов endpoint - мачове от стар сезон (за проверка на безплатния план)
     if (route === '/api/test') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
