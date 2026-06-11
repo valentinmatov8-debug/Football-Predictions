@@ -3566,10 +3566,15 @@ async function doLogout() {
 
 // Свързваме бутоните
 document.getElementById('loginBtn').addEventListener('click', () => openAuth('login'));
+const LEMON_CHECKOUT_URL = 'https://goalmind.lemonsqueezy.com/checkout/buy/9f0d8881-5a98-4991-828e-8ef8e8a918c2';
+
 document.getElementById('proBtn').addEventListener('click', () => {
-  // ако не си влязъл -> първо регистрация; ако си -> към плащане (по-късно)
-  if (!currentUser) { openAuth('register'); }
-  else { alert(translations[currentLang()].proSoon || 'Плащането ще бъде добавено скоро!'); }
+  if (!currentUser) {
+    openAuth('register');
+  } else {
+    const url = LEMON_CHECKOUT_URL + '?checkout[email]=' + encodeURIComponent(currentUser.email);
+    window.open(url, '_blank');
+  }
 });
 document.getElementById('authClose').addEventListener('click', closeAuth);
 document.getElementById('authModal').addEventListener('click', (e) => {
