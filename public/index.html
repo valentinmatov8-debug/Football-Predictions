@@ -1487,6 +1487,29 @@
   .tool-card-name { font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.3; }
   .tool-card:hover .tool-card-name { color: var(--green); }
 
+  .tool-card.pro-locked { position: relative; opacity: 0.55; cursor: pointer; }
+  .tool-card.pro-locked::after { content: '🔒'; position: absolute; top: 4px; right: 6px; font-size: 13px; }
+  .pro-gate-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.78);
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
+  }
+  .pro-gate-box {
+    background: var(--card); border: 2px solid var(--gold);
+    border-radius: 18px; padding: 36px 28px; max-width: 360px;
+    width: 90%; text-align: center; position: relative;
+  }
+  .pro-gate-box h3 { font-size: 22px; font-weight: 900; color: var(--gold); margin: 0 0 12px; }
+  .pro-gate-box p { font-size: 14px; color: var(--muted); margin: 0 0 22px; line-height: 1.6; }
+  .pro-gate-btn {
+    display: block; width: 100%;
+    background: linear-gradient(135deg,#ffd32a,#ffae00);
+    color: #000; font-weight: 800; font-size: 15px;
+    border: none; border-radius: 10px; padding: 14px;
+    cursor: pointer; margin-bottom: 10px; transition: opacity .15s;
+  }
+  .pro-gate-btn:hover { opacity: 0.88; }
+  .pro-gate-close { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
+
   /* FORM GUIDE */
   .form-dots {
     display: flex;
@@ -2109,6 +2132,15 @@
 </div>
 
 <!-- TOOL MODAL (инструменти + калкулатор) -->
+<!-- PRO GATE MODAL -->
+<div id="proGateOverlay" class="pro-gate-overlay" style="display:none;">
+  <div class="pro-gate-box">
+    <h3>🔒 PRO функция</h3>
+    <p>Тази функция е достъпна само за PRO потребители.<br>Надстрой акаунта си за пълен достъп до AI прогнози, статистики и инструменти.</p>
+    <button class="pro-gate-btn" id="proGateUpgradeBtn">⚡ Вземи PRO — 9.99 лв/мес</button>
+    <button class="pro-gate-close" id="proGateCloseBtn">Затвори</button>
+  </div>
+</div>
 <div class="modal-overlay" id="toolModal">
   <div class="tool-modal">
     <div class="tool-modal-header">
@@ -3540,6 +3572,7 @@ async function submitAuth() {
     currentUser = data.user;
     showAuthMsg(dict.authSuccess || 'Успешно!', 'success');
     updateAuthUI();
+    updateProLocks();
     setTimeout(closeAuth, 800);
   } catch (err) {
     showAuthMsg(dict.errServer || 'Грешка със сървъра', 'error');
@@ -3554,6 +3587,7 @@ async function checkSession() {
     const data = await res.json();
     currentUser = data.user;
     updateAuthUI();
+    updateProLocks();
   } catch { /* сървърът не е достъпен локално */ }
 }
 
@@ -3562,6 +3596,7 @@ async function doLogout() {
   try { await fetch('/api/logout', { method: 'POST' }); } catch {}
   currentUser = null;
   updateAuthUI();
+  updateProLocks();
 }
 
 // Свързваме бутоните
@@ -3589,6 +3624,7 @@ document.getElementById('logoutBtn').addEventListener('click', doLogout);
   });
 });
 
+updateProLocks(); // заключи инструментите веднага при зареждане
 checkSession();
 
 // ===== КРАЙ РЕГИСТРАЦИЯ / ВХОД =====
@@ -4075,7 +4111,9 @@ function escapeHtmlClient(s) {
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.ai-predict-btn');
   if (!btn) return;
-  e.stopPropagation(); // да не отвори модала за статистика
+  e.stopPropagation();
+
+  if (!userIsPro()) { showProGate(); return; }
 
   const wrap = btn.closest('.match-ai-select');
   if (!wrap) return;
@@ -4318,8 +4356,48 @@ function openTool(toolKey, preset) {
   toolModal.classList.add('open');
 }
 
+// ── PRO SYSTEM ──
+const LEMON_URL = 'https://goalmind.lemonsqueezy.com/checkout/buy/9f0d8881-5a98-4991-828e-8ef8e8a918c2';
+const ADMIN_EMAIL = 'valentinmatov8@gmail.com'; // admin - always PRO
+const PRO_TOOLS = ['ai','stats','h2h','odds','goals','corners','injuries'];
+
+function userIsPro() {
+  if (!currentUser) return false;
+  if (currentUser.email === ADMIN_EMAIL) return true;
+  return !!currentUser.is_pro;
+}
+
+function showProGate() {
+  document.getElementById('proGateOverlay').style.display = 'flex';
+}
+
+function updateProLocks() {
+  const isPro = userIsPro();
+  document.querySelectorAll('.tool-card[data-tool]').forEach(card => {
+    const t = card.getAttribute('data-tool');
+    if (PRO_TOOLS.includes(t)) card.classList.toggle('pro-locked', !isPro);
+  });
+}
+
+document.getElementById('proGateCloseBtn').addEventListener('click', () => {
+  document.getElementById('proGateOverlay').style.display = 'none';
+});
+document.getElementById('proGateOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('proGateOverlay'))
+    document.getElementById('proGateOverlay').style.display = 'none';
+});
+document.getElementById('proGateUpgradeBtn').addEventListener('click', () => {
+  document.getElementById('proGateOverlay').style.display = 'none';
+  if (!currentUser) { openAuth('register'); }
+  else { window.open(LEMON_URL + '?checkout[email]=' + encodeURIComponent(currentUser.email), '_blank'); }
+});
+
 document.querySelectorAll('.tool-card[data-tool]').forEach(card => {
-  card.addEventListener('click', () => openTool(card.getAttribute('data-tool')));
+  card.addEventListener('click', () => {
+    const t = card.getAttribute('data-tool');
+    if (PRO_TOOLS.includes(t) && !userIsPro()) { showProGate(); return; }
+    openTool(t);
+  });
 });
 document.getElementById('toolModalClose').addEventListener('click', () => toolModal.classList.remove('open'));
 toolModal.addEventListener('click', (e) => { if (e.target === toolModal) toolModal.classList.remove('open'); });
