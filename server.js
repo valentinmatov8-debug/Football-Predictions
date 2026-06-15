@@ -1313,8 +1313,8 @@ async function handleApi(req, res, route, method) {
             );
 
             // Живите мачове с по-нисък праг (60%) за да се показват
-            const threshold = isLive ? 60 : 62;
-            const isSure = pred.confidence >= threshold && pred.factorsAligned >= 2 && hForm.played >= 3 && aForm.played >= 3;
+            const threshold = isLive ? 58 : 60;
+            const isSure = pred.confidence >= threshold && hForm.played >= 3 && aForm.played >= 3;
 
             if (isSure) {
               let sureLevel = 'low';
