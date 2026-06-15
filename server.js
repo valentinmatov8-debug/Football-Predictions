@@ -1263,27 +1263,37 @@ async function handleApi(req, res, route, method) {
       }
     }
 
-    // ---------- СИГУРНИ ЗАЛОЗИ - ПОДОБРЕНА ВЕРСИЯ ----------
+    // ---------- СИГУРНИ ЗАЛОЗИ - С ЖИВИ МАЧОВЕ ----------
     if (route === '/api/sure-bets') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const cached = getCached('sure-bets', 300000);
-      if (cached) return sendJSON(res, 200, cached);
 
       try {
         const weights = await getWeights();
+
+        // Живите мачове - кеш 60 сек (актуални)
+        // Днешните мачове - кеш 5 мин (не се менят често)
         const [liveData, todayData] = await Promise.all([
-          apiFetch('/fixtures?live=all').catch(() => ({ response: [] })),
-          apiFetch('/fixtures?date=' + new Date().toISOString().slice(0,10)).catch(() => ({ response: [] }))
+          (getCached('sb-live', 60000) ? Promise.resolve({ response: getCached('sb-live', 60000) }) :
+            apiFetch('/fixtures?live=all').then(d => { setCached('sb-live', d.response || []); return d; })).catch(() => ({ response: [] })),
+          (getCached('sb-today', 300000) ? Promise.resolve({ response: getCached('sb-today', 300000) }) :
+            apiFetch('/fixtures?date=' + new Date().toISOString().slice(0,10)).then(d => { setCached('sb-today', d.response || []); return d; })).catch(() => ({ response: [] }))
         ]);
-        let fixtures = [...(liveData.response || []), ...(todayData.response || [])];
+
+        // Живите мачове ВИНАГИ първи
         const seen = {};
-        fixtures = fixtures.filter(f => { if (seen[f.fixture.id]) return false; seen[f.fixture.id] = 1; return true; });
-        fixtures = fixtures.slice(0, 30);
+        let fixtures = [...(liveData.response || []), ...(todayData.response || [])].filter(f => {
+          if (seen[f.fixture.id]) return false;
+          seen[f.fixture.id] = 1;
+          return true;
+        });
+        fixtures = fixtures.slice(0, 35);
 
         const sureBets = [];
         for (const f of fixtures) {
           const status = f.fixture.status.short;
           if (['FT','AET','PEN','PST','CANC'].includes(status)) continue;
+          const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(status);
+
           try {
             const [hForm, aForm, hLong, aLong, h2h] = await Promise.all([
               getTeamForm(f.teams.home.id, 5),
@@ -1302,10 +1312,11 @@ async function handleApi(req, res, route, method) {
               { homeLongForm: hLong, awayLongForm: aLong, homeDaysSinceLast: homeDays, awayDaysSinceLast: awayDays }
             );
 
-            const isSure = pred.confidence >= 62 && pred.factorsAligned >= 2 && hForm.played >= 3 && aForm.played >= 3;
+            // Живите мачове с по-нисък праг (60%) за да се показват
+            const threshold = isLive ? 60 : 62;
+            const isSure = pred.confidence >= threshold && pred.factorsAligned >= 2 && hForm.played >= 3 && aForm.played >= 3;
 
             if (isSure) {
-              const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(status);
               let sureLevel = 'low';
               if (pred.confidence >= 72 && pred.factorsAligned >= 3) sureLevel = 'high';
               else if (pred.confidence >= 65) sureLevel = 'medium';
@@ -1316,6 +1327,7 @@ async function handleApi(req, res, route, method) {
                 home: f.teams.home.name, away: f.teams.away.name,
                 homeLogo: f.teams.home.logo, awayLogo: f.teams.away.logo,
                 date: f.fixture.date, isLive,
+                elapsed: f.fixture.status.elapsed,
                 pick: pred.pick, pickType: pred.pickType,
                 confidence: pred.confidence,
                 homePct: pred.homePct, drawPct: pred.drawPct, awayPct: pred.awayPct,
@@ -1324,15 +1336,19 @@ async function handleApi(req, res, route, method) {
               savePrediction(f.fixture.id, f.teams.home.name, f.teams.away.name, f.league.name, f.fixture.date, pred);
             }
           } catch (e) { continue; }
-          if (sureBets.length >= 12) break;
+          if (sureBets.length >= 15) break;
         }
+
+        // Живите мачове ПЪРВИ, после по увереност
         sureBets.sort((a, b) => {
+          if (a.isLive && !b.isLive) return -1;
+          if (!a.isLive && b.isLive) return 1;
           const lo = { high: 3, medium: 2, low: 1 };
           if (lo[b.sureLevel] !== lo[a.sureLevel]) return lo[b.sureLevel] - lo[a.sureLevel];
           return b.confidence - a.confidence;
         });
+
         const result = { count: sureBets.length, bets: sureBets };
-        setCached('sure-bets', result);
         checkAndLearn();
         return sendJSON(res, 200, result);
       } catch (e) {
