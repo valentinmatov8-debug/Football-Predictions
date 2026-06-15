@@ -16,6 +16,37 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// ============================================================
+//   API заявки - брояч (макс 5000/ден за AI, 2500 за сайта)
+// ============================================================
+const apiUsage = { date: '', count: 0, aiCount: 0 };
+const API_DAILY_LIMIT = 7000;      // общ лимит (пазим 500 резерв)
+const AI_DAILY_LIMIT = 5000;       // за AI обучение
+const SITE_DAILY_LIMIT = 2000;     // за сайта
+
+function getTodayStr() { return new Date().toISOString().slice(0, 10); }
+
+function checkApiUsage(isAI = false) {
+  const today = getTodayStr();
+  if (apiUsage.date !== today) { apiUsage.date = today; apiUsage.count = 0; apiUsage.aiCount = 0; }
+  if (apiUsage.count >= API_DAILY_LIMIT) return false;
+  if (isAI && apiUsage.aiCount >= AI_DAILY_LIMIT) return false;
+  return true;
+}
+
+function trackApiUsage(isAI = false) {
+  apiUsage.count++;
+  if (isAI) apiUsage.aiCount++;
+}
+
+async function apiFetchTracked(endpoint, isAI = false) {
+  if (!checkApiUsage(isAI)) throw new Error('API_LIMIT_REACHED');
+  trackApiUsage(isAI);
+  const res = await fetch(API_BASE + endpoint, { headers: { 'x-apisports-key': API_KEY } });
+  if (!res.ok) throw new Error('API ' + res.status);
+  return res.json();
+}
+
 // Създаваме таблиците при стартиране, ако ги няма
 async function initDatabase() {
   try {
@@ -72,12 +103,56 @@ async function initDatabase() {
         home_advantage REAL DEFAULT 1.0,
         goals_weight REAL DEFAULT 1.0,
         h2h_weight REAL DEFAULT 1.0,
+        injury_weight REAL DEFAULT 1.0,
+        fatigue_weight REAL DEFAULT 1.0,
+        odds_weight REAL DEFAULT 1.0,
         total_checked INTEGER DEFAULT 0,
-        total_correct INTEGER DEFAULT 0
+        total_correct INTEGER DEFAULT 0,
+        last_updated TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    // Исторически тренировъчни данни за AI (събирани автоматично)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS training_data (
+        id SERIAL PRIMARY KEY,
+        fixture_id BIGINT UNIQUE,
+        home_team TEXT,
+        away_team TEXT,
+        league TEXT,
+        season INTEGER,
+        home_goals INTEGER,
+        away_goals INTEGER,
+        result TEXT,
+        home_form_pts REAL,
+        away_form_pts REAL,
+        home_avg_scored REAL,
+        home_avg_conceded REAL,
+        away_avg_scored REAL,
+        away_avg_conceded REAL,
+        h2h_home_wins INTEGER,
+        h2h_away_wins INTEGER,
+        h2h_draws INTEGER,
+        match_date TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    // Дневен API брояч (за dashboard)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS api_usage_log (
+        log_date DATE PRIMARY KEY,
+        total_calls INTEGER DEFAULT 0,
+        ai_calls INTEGER DEFAULT 0,
+        site_calls INTEGER DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
     // вкарваме начален ред за тежестите, ако липсва
     await pool.query(`INSERT INTO ai_weights (id) VALUES (1) ON CONFLICT (id) DO NOTHING;`);
+    // Добавяме нови колони ако липсват (миграция)
+    await pool.query(`ALTER TABLE ai_weights ADD COLUMN IF NOT EXISTS injury_weight REAL DEFAULT 1.0`);
+    await pool.query(`ALTER TABLE ai_weights ADD COLUMN IF NOT EXISTS fatigue_weight REAL DEFAULT 1.0`);
+    await pool.query(`ALTER TABLE ai_weights ADD COLUMN IF NOT EXISTS odds_weight REAL DEFAULT 1.0`);
+    await pool.query(`ALTER TABLE ai_weights ADD COLUMN IF NOT EXISTS last_updated TIMESTAMP DEFAULT NOW()`);
     console.log('✓ Базата данни е готова');
   } catch (err) {
     console.error('Грешка при създаване на таблиците:', err.message);
@@ -94,10 +169,25 @@ function getCached(key, maxAgeMs) {
 function setCached(key, data) { cache[key] = { data, time: Date.now() }; }
 
 async function apiFetch(endpoint) {
+  trackApiUsage(false);
   const res = await fetch(API_BASE + endpoint, { headers: { 'x-apisports-key': API_KEY } });
   if (!res.ok) throw new Error('API ' + res.status);
   return res.json();
 }
+
+// Запазва дневния API usage в БД за dashboard
+async function logApiUsage() {
+  try {
+    const today = getTodayStr();
+    await pool.query(`
+      INSERT INTO api_usage_log (log_date, total_calls, ai_calls, site_calls, updated_at)
+      VALUES ($1, $2, $3, $4, NOW())
+      ON CONFLICT (log_date) DO UPDATE SET
+        total_calls = $2, ai_calls = $3, site_calls = $4, updated_at = NOW()
+    `, [today, apiUsage.count, apiUsage.aiCount, apiUsage.count - apiUsage.aiCount]);
+  } catch (e) { /* тихо */ }
+}
+setInterval(logApiUsage, 60000);
 
 function simplifyFixture(f) {
   const status = f.fixture.status.short;
@@ -212,18 +302,47 @@ async function getH2H(id1, id2, count) {
   return { total: matches.length, team1Wins, team2Wins, draws, matches };
 }
 
-// Изчислява прогноза от реалните данни (безплатна формула, с тежести за самообучение)
-function computePrediction(home, away, h2h, weights) {
-  // тежести по подразбиране (ако няма обучени)
-  const w = weights || { form_weight: 1.0, home_advantage: 1.0, goals_weight: 1.0, h2h_weight: 1.0 };
+// Изчислява прогноза от реалните данни - ПОДОБРЕНА ВЕРСИЯ с повече фактори
+function computePrediction(home, away, h2h, weights, extra = {}) {
+  const w = weights || { form_weight: 1.0, home_advantage: 1.0, goals_weight: 1.0, h2h_weight: 1.0, injury_weight: 1.0, fatigue_weight: 1.0, odds_weight: 1.0 };
 
-  // Силов рейтинг: форма (точки) + голова разлика * тегло, с домакинско предимство * тегло
+  // --- Основни сили ---
   const homeGoalDiff = (home.avgScored - home.avgConceded) * 2 * w.goals_weight;
   const awayGoalDiff = (away.avgScored - away.avgConceded) * 2 * w.goals_weight;
-  const homeStrength = home.points * w.form_weight + homeGoalDiff + 1.2 * w.home_advantage;
-  const awayStrength = away.points * w.form_weight + awayGoalDiff;
 
-  // H2H бонус * тегло
+  // --- Умора: ако мачът е бил преди <4 дни → наказание ---
+  const homeFatigue = (extra.homeDaysSinceLast != null && extra.homeDaysSinceLast < 4)
+    ? -0.4 * w.fatigue_weight : 0;
+  const awayFatigue = (extra.awayDaysSinceLast != null && extra.awayDaysSinceLast < 4)
+    ? -0.4 * w.fatigue_weight : 0;
+
+  // --- Наранявания: всеки контузен → -0.18 ---
+  const homeInjury = (extra.homeInjuries || 0) * 0.18 * w.injury_weight;
+  const awayInjury = (extra.awayInjuries || 0) * 0.18 * w.injury_weight;
+
+  // --- Odds сигнал: движение на котировките ---
+  // положително = домакинът е подсилен от пазара
+  const oddsBoost = (extra.oddsSignal || 0) * w.odds_weight;
+
+  // --- Форма (последни мачове) с тегло 10 вместо 5 ---
+  const homeLongForm = extra.homeLongForm || null;
+  const awayLongForm = extra.awayLongForm || null;
+  const homeFormBonus = homeLongForm ? (homeLongForm.wins * 3 + homeLongForm.draws) * 0.05 : 0;
+  const awayFormBonus = awayLongForm ? (awayLongForm.wins * 3 + awayLongForm.draws) * 0.05 : 0;
+
+  const homeStrength = Math.max(0.1,
+    home.points * w.form_weight +
+    homeGoalDiff +
+    1.2 * w.home_advantage +
+    homeFatigue - homeInjury + oddsBoost + homeFormBonus
+  );
+  const awayStrength = Math.max(0.1,
+    away.points * w.form_weight +
+    awayGoalDiff +
+    awayFatigue - awayInjury - oddsBoost + awayFormBonus
+  );
+
+  // --- H2H ---
   let homeH2H = 0, awayH2H = 0;
   if (h2h && h2h.total > 0) {
     homeH2H = h2h.team1Wins * 0.8 * w.h2h_weight;
@@ -233,12 +352,10 @@ function computePrediction(home, away, h2h, weights) {
   const homeScore = Math.max(0.1, homeStrength + homeH2H);
   const awayScore = Math.max(0.1, awayStrength + awayH2H);
 
-  // Базови вероятности
   const total = homeScore + awayScore;
   let pHome = homeScore / total;
   let pAway = awayScore / total;
 
-  // Дял за равенство според близостта на силите
   const closeness = 1 - Math.abs(pHome - pAway);
   const pDraw = 0.18 + closeness * 0.14;
 
@@ -262,6 +379,15 @@ function computePrediction(home, away, h2h, weights) {
   const over25 = expTotal > 2.5;
   const bttsLikely = expHomeGoals > 0.9 && expAwayGoals > 0.9;
 
+  // Сигурност: колко фактора подкрепят прогнозата
+  let factorsAligned = 0;
+  if (homeStrength > awayStrength && pickType === '1') factorsAligned++;
+  if (h2h && h2h.team1Wins > h2h.team2Wins && pickType === '1') factorsAligned++;
+  if (h2h && h2h.team2Wins > h2h.team1Wins && pickType === '2') factorsAligned++;
+  if (oddsBoost > 0 && pickType === '1') factorsAligned++;
+  if (oddsBoost < 0 && pickType === '2') factorsAligned++;
+  if ((extra.homeInjuries || 0) < (extra.awayInjuries || 0) && pickType === '1') factorsAligned++;
+
   return {
     homePct, drawPct, awayPct,
     pick, pickType,
@@ -269,7 +395,15 @@ function computePrediction(home, away, h2h, weights) {
     expAwayGoals: Math.round(expAwayGoals * 10) / 10,
     expTotalGoals: Math.round(expTotal * 10) / 10,
     over25, bttsLikely,
-    confidence: Math.max(homePct, drawPct, awayPct)
+    confidence: Math.max(homePct, drawPct, awayPct),
+    factorsAligned,
+    extra: {
+      homeFatigue: homeFatigue !== 0,
+      awayFatigue: awayFatigue !== 0,
+      homeInjuries: extra.homeInjuries || 0,
+      awayInjuries: extra.awayInjuries || 0,
+      oddsSignal: extra.oddsSignal || 0
+    }
   };
 }
 
@@ -293,22 +427,21 @@ async function savePrediction(fixtureId, homeTeam, awayTeam, league, matchDate, 
   } catch (e) { /* тихо */ }
 }
 
-// Проверява свършилите мачове и учи от тях (самообучение)
+// Проверява свършилите мачове и учи от тях - УМНО САМООБУЧЕНИЕ
 let lastLearnTime = 0;
 async function checkAndLearn() {
-  // не по-често от веднъж на 10 мин
   if (Date.now() - lastLearnTime < 600000) return;
   lastLearnTime = Date.now();
   try {
-    // взимаме непроверени прогнози за мачове, които вече трябва да са свършили
     const pending = await pool.query(
       `SELECT * FROM predictions WHERE checked = false AND match_date < NOW() - INTERVAL '2 hours' LIMIT 20`
     );
     if (pending.rows.length === 0) return;
 
     let correctDelta = 0, checkedDelta = 0;
+    let formErrors = 0, h2hErrors = 0, homeAdvErrors = 0;
+
     for (const p of pending.rows) {
-      // питаме API за резултата
       let fx;
       try {
         const data = await apiFetch('/fixtures?id=' + p.fixture_id);
@@ -316,7 +449,7 @@ async function checkAndLearn() {
       } catch (e) { continue; }
       if (!fx) continue;
       const status = fx.fixture.status.short;
-      if (!['FT','AET','PEN'].includes(status)) continue; // още не е свършил
+      if (!['FT','AET','PEN'].includes(status)) continue;
 
       const gh = fx.goals.home, ga = fx.goals.away;
       let actualResult = 'X';
@@ -328,29 +461,151 @@ async function checkAndLearn() {
         `UPDATE predictions SET actual_home=$1, actual_away=$2, actual_result=$3, correct=$4, checked=true WHERE fixture_id=$5`,
         [gh, ga, actualResult, correct, p.fixture_id]
       );
+
+      // Запази в training_data за бъдещо обучение
+      try {
+        await pool.query(`
+          INSERT INTO training_data (fixture_id, home_team, away_team, league, result,
+            home_goals, away_goals, match_date)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+          ON CONFLICT (fixture_id) DO NOTHING
+        `, [p.fixture_id, p.home_team, p.away_team, p.league, actualResult, gh, ga, p.match_date]);
+      } catch(e) {}
+
       checkedDelta++;
       if (correct) correctDelta++;
+      else {
+        // Анализирай вида грешка
+        if (p.predicted === '1' && actualResult === '2') homeAdvErrors++;
+        if (Math.abs(p.prob_home - p.prob_away) < 15) h2hErrors++;
+        formErrors++;
+      }
     }
 
     if (checkedDelta > 0) {
-      // обновяваме общата статистика
       await pool.query(
-        `UPDATE ai_weights SET total_checked = total_checked + $1, total_correct = total_correct + $2 WHERE id = 1`,
+        `UPDATE ai_weights SET total_checked = total_checked + $1, total_correct = total_correct + $2, last_updated = NOW() WHERE id = 1`,
         [checkedDelta, correctDelta]
       );
-      // самообучение: ако точността е ниска, леко коригираме тежестите
+
+      // УМНО самообучение - коригира конкретните слаби места
       const wq = await pool.query('SELECT * FROM ai_weights WHERE id = 1');
       const w = wq.rows[0];
-      if (w && w.total_checked >= 20) {
+      if (w && w.total_checked >= 10) {
         const accuracy = w.total_correct / w.total_checked;
-        // ако сме под 50%, засилваме формата (най-важният фактор); ако над 60%, стабилизираме
-        if (accuracy < 0.5) {
-          await pool.query(`UPDATE ai_weights SET form_weight = LEAST(form_weight + 0.05, 2.0), home_advantage = LEAST(home_advantage + 0.03, 2.0) WHERE id = 1`);
+
+        if (homeAdvErrors > checkedDelta * 0.4) {
+          // Прекалено разчитаме на домакинско предимство
+          await pool.query(`UPDATE ai_weights SET home_advantage = GREATEST(home_advantage - 0.05, 0.5) WHERE id = 1`);
+        }
+        if (h2hErrors > checkedDelta * 0.4) {
+          // H2H не помага много → намали теглото му
+          await pool.query(`UPDATE ai_weights SET h2h_weight = GREATEST(h2h_weight - 0.03, 0.3) WHERE id = 1`);
+        }
+        if (accuracy < 0.55) {
+          // Ниска точност → засили формата
+          await pool.query(`UPDATE ai_weights SET form_weight = LEAST(form_weight + 0.04, 2.0), goals_weight = LEAST(goals_weight + 0.03, 2.0) WHERE id = 1`);
+        } else if (accuracy > 0.72) {
+          // Добра точност → стабилизирай
+          await pool.query(`UPDATE ai_weights SET form_weight = LEAST(form_weight + 0.01, 2.0) WHERE id = 1`);
+        }
+
+        console.log(`🧠 AI научи от ${checkedDelta} мача | Точност: ${(accuracy*100).toFixed(1)}%`);
+      }
+    }
+  } catch (e) { console.error('checkAndLearn грешка:', e.message); }
+}
+
+// ============================================================
+//   АВТОМАТИЧЕН КОЛЕКТОР НА ИСТОРИЧЕСКИ ДАННИ (5000 заявки/ден)
+// ============================================================
+const TOP_LEAGUES = [39, 140, 135, 78, 61, 94, 88, 203, 71, 179];
+const SEASONS = [2020, 2021, 2022, 2023, 2024];
+let collectorRunning = false;
+let collectorState = { league: 0, season: 0, page: 0, totalCollected: 0 };
+
+async function collectHistoricalData() {
+  if (collectorRunning) return;
+  if (!checkApiUsage(true)) {
+    console.log('⏸ AI лимит достигнат днес - ще продължи утре');
+    return;
+  }
+
+  // Провери дали имаме нужда от повече данни
+  const countRes = await pool.query('SELECT COUNT(*) FROM training_data');
+  const totalMatches = parseInt(countRes.rows[0].count);
+  collectorState.totalCollected = totalMatches;
+
+  if (totalMatches >= 50000) {
+    console.log(`✅ Достатъчно данни: ${totalMatches} мача`);
+    return;
+  }
+
+  collectorRunning = true;
+  console.log(`🔄 Събиране на данни... (${totalMatches} мача досега)`);
+
+  try {
+    // Вземи следващата партида (пести заявки с кеш)
+    for (const leagueId of TOP_LEAGUES) {
+      for (const season of SEASONS) {
+        if (!checkApiUsage(true)) { collectorRunning = false; return; }
+
+        const cacheKey = `hist:${leagueId}:${season}`;
+        const alreadyDone = getCached(cacheKey, 86400000); // 24ч кеш
+        if (alreadyDone) continue;
+
+        try {
+          const data = await apiFetchTracked(`/fixtures?league=${leagueId}&season=${season}&status=FT`, true);
+          const fixtures = data.response || [];
+
+          let newCount = 0;
+          for (const f of fixtures) {
+            const gh = f.goals.home, ga = f.goals.away;
+            if (gh == null || ga == null) continue;
+            let result = 'X';
+            if (gh > ga) result = '1';
+            else if (ga > gh) result = '2';
+
+            try {
+              const r = await pool.query(`
+                INSERT INTO training_data (fixture_id, home_team, away_team, league, season,
+                  home_goals, away_goals, result, match_date)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+                ON CONFLICT (fixture_id) DO NOTHING
+              `, [f.fixture.id, f.teams.home.name, f.teams.away.name,
+                  f.league.name, season, gh, ga, result, f.fixture.date]);
+              if (r.rowCount > 0) newCount++;
+            } catch(e) {}
+          }
+
+          if (newCount > 0) {
+            collectorState.totalCollected += newCount;
+            console.log(`📥 Лига ${leagueId} / ${season}: +${newCount} мача (общо: ${collectorState.totalCollected})`);
+          }
+          setCached(cacheKey, true);
+
+          // Малка пауза между заявките
+          await new Promise(r => setTimeout(r, 200));
+
+        } catch(e) {
+          if (e.message === 'API_LIMIT_REACHED') { collectorRunning = false; return; }
         }
       }
     }
-  } catch (e) { /* тихо */ }
+  } finally {
+    collectorRunning = false;
+  }
 }
+
+// Стартира колектора на всеки час (в рамките на AI лимита)
+setInterval(async () => {
+  try { await collectHistoricalData(); } catch(e) {}
+}, 3600000);
+
+// И веднъж при старт (след 30 сек)
+setTimeout(async () => {
+  try { await collectHistoricalData(); } catch(e) {}
+}, 30000);
 
 // ---------- Помощни ----------
 function sendJSON(res, code, obj, headers) {
@@ -894,43 +1149,81 @@ async function handleApi(req, res, route, method) {
       const body = await readBody(req);
       const homeName = (body.home || '').trim();
       const awayName = (body.away || '').trim();
+      const fixtureId = body.fixtureId || null;
       if (!homeName || !awayName) return sendJSON(res, 400, { error: 'missing_teams' });
 
-      // кеш по двойката отбори (за 10 мин), за да пестим заявки
       const cacheKey = 'predict:' + homeName.toLowerCase() + ':' + awayName.toLowerCase();
       const cached = getCached(cacheKey, 600000);
       if (cached) return sendJSON(res, 200, cached);
 
-      // 1) Намираме двата отбора
       const homeTeam = await findTeam(homeName);
       if (!homeTeam) return sendJSON(res, 404, { error: 'home_not_found', name: homeName });
       const awayTeam = await findTeam(awayName);
       if (!awayTeam) return sendJSON(res, 404, { error: 'away_not_found', name: awayName });
 
-      // 2) Тегли форма и директни срещи
-      const [homeForm, awayForm, h2h] = await Promise.all([
+      // Вземи форма (5 мача) + дълга форма (10 мача) + H2H паралелно
+      const [homeForm, awayForm, homeLongForm, awayLongForm, h2h] = await Promise.all([
         getTeamForm(homeTeam.id, 5),
         getTeamForm(awayTeam.id, 5),
-        getH2H(homeTeam.id, awayTeam.id, 5)
+        getTeamForm(homeTeam.id, 10),
+        getTeamForm(awayTeam.id, 10),
+        getH2H(homeTeam.id, awayTeam.id, 10)
       ]);
 
-      // 3) Смятаме прогнозата (с обучените тежести)
+      // Наранявания (ако имаме fixture ID)
+      let homeInjuries = 0, awayInjuries = 0;
+      if (fixtureId) {
+        try {
+          const injData = await apiFetch('/injuries?fixture=' + fixtureId);
+          const players = injData.response || [];
+          homeInjuries = players.filter(p => p.team && p.team.id === homeTeam.id).length;
+          awayInjuries = players.filter(p => p.team && p.team.id === awayTeam.id).length;
+        } catch(e) {}
+      }
+
+      // Odds (ако имаме fixture ID)
+      let oddsSignal = 0;
+      if (fixtureId) {
+        try {
+          const oddsData = await apiFetch('/odds?fixture=' + fixtureId);
+          const resp = (oddsData.response || [])[0];
+          if (resp && resp.bookmakers && resp.bookmakers[0]) {
+            const bm = resp.bookmakers[0];
+            const mw = (bm.bets || []).find(b => b.name === 'Match Winner');
+            if (mw) {
+              const homeOdd = parseFloat((mw.values.find(v => v.value === 'Home') || {}).odd) || 0;
+              const awayOdd = parseFloat((mw.values.find(v => v.value === 'Away') || {}).odd) || 0;
+              if (homeOdd && awayOdd) {
+                // По-ниска котировка = по-вероятен → сигнал
+                oddsSignal = (1/homeOdd - 1/awayOdd);
+              }
+            }
+          }
+        } catch(e) {}
+      }
+
+      // Умора: дни от последния мач
+      const homeDaysSinceLast = homeForm.recent[0]
+        ? Math.floor((Date.now() - new Date(homeForm.recent[0].date)) / 86400000) : 7;
+      const awayDaysSinceLast = awayForm.recent[0]
+        ? Math.floor((Date.now() - new Date(awayForm.recent[0].date)) / 86400000) : 7;
+
       const weights = await getWeights();
       const prediction = computePrediction(
         Object.assign({ name: homeTeam.name }, homeForm),
         Object.assign({ name: awayTeam.name }, awayForm),
-        h2h,
-        weights
+        h2h, weights,
+        { homeInjuries, awayInjuries, oddsSignal, homeDaysSinceLast, awayDaysSinceLast, homeLongForm, awayLongForm }
       );
 
       const result = {
-        home: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo, country: homeTeam.country, form: homeForm },
-        away: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo, country: awayTeam.country, form: awayForm },
-        h2h: h2h,
-        prediction: prediction
+        home: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo, country: homeTeam.country, form: homeForm, longForm: homeLongForm },
+        away: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo, country: awayTeam.country, form: awayForm, longForm: awayLongForm },
+        h2h, prediction,
+        meta: { homeInjuries, awayInjuries, oddsSignal: oddsSignal.toFixed(3), homeDaysSinceLast, awayDaysSinceLast }
       };
       setCached(cacheKey, result);
-      // проверяваме минали мачове за самообучение (фоново)
+      if (fixtureId) savePrediction(fixtureId, homeTeam.name, awayTeam.name, '', null, prediction);
       checkAndLearn();
       return sendJSON(res, 200, result);
     }
@@ -970,44 +1263,53 @@ async function handleApi(req, res, route, method) {
       }
     }
 
-    // ---------- СИГУРНИ ЗАЛОЗИ (висока увереност, предстоящи + живи) ----------
+    // ---------- СИГУРНИ ЗАЛОЗИ - ПОДОБРЕНА ВЕРСИЯ ----------
     if (route === '/api/sure-bets') {
       if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
-      const cached = getCached('sure-bets', 300000); // 5 мин
+      const cached = getCached('sure-bets', 300000);
       if (cached) return sendJSON(res, 200, cached);
 
       try {
         const weights = await getWeights();
-        // взимаме живи + днешни мачове
         const [liveData, todayData] = await Promise.all([
           apiFetch('/fixtures?live=all').catch(() => ({ response: [] })),
           apiFetch('/fixtures?date=' + new Date().toISOString().slice(0,10)).catch(() => ({ response: [] }))
         ]);
         let fixtures = [...(liveData.response || []), ...(todayData.response || [])];
-        // махаме дубликати по id
         const seen = {};
         fixtures = fixtures.filter(f => { if (seen[f.fixture.id]) return false; seen[f.fixture.id] = 1; return true; });
-        // ограничаваме до 25 за да не правим твърде много заявки
-        fixtures = fixtures.slice(0, 25);
+        fixtures = fixtures.slice(0, 30);
 
         const sureBets = [];
         for (const f of fixtures) {
           const status = f.fixture.status.short;
-          // само предстоящи или живи (не свършили)
           if (['FT','AET','PEN','PST','CANC'].includes(status)) continue;
           try {
-            const [hForm, aForm] = await Promise.all([
+            const [hForm, aForm, hLong, aLong, h2h] = await Promise.all([
               getTeamForm(f.teams.home.id, 5),
-              getTeamForm(f.teams.away.id, 5)
+              getTeamForm(f.teams.away.id, 5),
+              getTeamForm(f.teams.home.id, 10),
+              getTeamForm(f.teams.away.id, 10),
+              getH2H(f.teams.home.id, f.teams.away.id, 10)
             ]);
+            const homeDays = hForm.recent[0] ? Math.floor((Date.now() - new Date(hForm.recent[0].date)) / 86400000) : 7;
+            const awayDays = aForm.recent[0] ? Math.floor((Date.now() - new Date(aForm.recent[0].date)) / 86400000) : 7;
+
             const pred = computePrediction(
               Object.assign({ name: f.teams.home.name }, hForm),
               Object.assign({ name: f.teams.away.name }, aForm),
-              null, weights
+              h2h, weights,
+              { homeLongForm: hLong, awayLongForm: aLong, homeDaysSinceLast: homeDays, awayDaysSinceLast: awayDays }
             );
-            // "сигурен" = увереност >= 60% и достатъчно данни
-            if (pred.confidence >= 60 && hForm.played >= 3 && aForm.played >= 3) {
+
+            const isSure = pred.confidence >= 62 && pred.factorsAligned >= 2 && hForm.played >= 3 && aForm.played >= 3;
+
+            if (isSure) {
               const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(status);
+              let sureLevel = 'low';
+              if (pred.confidence >= 72 && pred.factorsAligned >= 3) sureLevel = 'high';
+              else if (pred.confidence >= 65) sureLevel = 'medium';
+
               sureBets.push({
                 fixtureId: f.fixture.id,
                 league: f.league.name, flag: f.league.flag,
@@ -1016,22 +1318,99 @@ async function handleApi(req, res, route, method) {
                 date: f.fixture.date, isLive,
                 pick: pred.pick, pickType: pred.pickType,
                 confidence: pred.confidence,
-                homePct: pred.homePct, drawPct: pred.drawPct, awayPct: pred.awayPct
+                homePct: pred.homePct, drawPct: pred.drawPct, awayPct: pred.awayPct,
+                factorsAligned: pred.factorsAligned, sureLevel, extra: pred.extra
               });
-              // записваме прогнозата за самообучение
               savePrediction(f.fixture.id, f.teams.home.name, f.teams.away.name, f.league.name, f.fixture.date, pred);
             }
           } catch (e) { continue; }
-          if (sureBets.length >= 10) break; // максимум 10
+          if (sureBets.length >= 12) break;
         }
-        // подреждаме по увереност
-        sureBets.sort((a, b) => b.confidence - a.confidence);
+        sureBets.sort((a, b) => {
+          const lo = { high: 3, medium: 2, low: 1 };
+          if (lo[b.sureLevel] !== lo[a.sureLevel]) return lo[b.sureLevel] - lo[a.sureLevel];
+          return b.confidence - a.confidence;
+        });
         const result = { count: sureBets.length, bets: sureBets };
         setCached('sure-bets', result);
         checkAndLearn();
         return sendJSON(res, 200, result);
       } catch (e) {
         return sendJSON(res, 200, { count: 0, bets: [] });
+      }
+    }
+
+    // ---------- AI LEARNING DASHBOARD ----------
+    if (route === '/api/ai-dashboard') {
+      try {
+        const [weights, trainingCount, predictions] = await Promise.all([
+          pool.query('SELECT * FROM ai_weights WHERE id = 1'),
+          pool.query('SELECT COUNT(*) FROM training_data'),
+          pool.query(`
+            SELECT
+              COUNT(*) FILTER (WHERE checked = true) AS checked,
+              COUNT(*) FILTER (WHERE correct = true) AS correct,
+              COUNT(*) FILTER (WHERE checked = true AND created_at > NOW() - INTERVAL '7 days') AS week_checked,
+              COUNT(*) FILTER (WHERE correct = true AND created_at > NOW() - INTERVAL '7 days') AS week_correct,
+              COUNT(*) FILTER (WHERE checked = true AND created_at > NOW() - INTERVAL '24 hours') AS today_checked,
+              COUNT(*) FILTER (WHERE correct = true AND created_at > NOW() - INTERVAL '24 hours') AS today_correct
+            FROM predictions
+          `)
+        ]);
+
+        const w = weights.rows[0] || {};
+        const p = predictions.rows[0] || {};
+        const totalMatches = parseInt(trainingCount.rows[0].count) || 0;
+        const totalChecked = parseInt(p.checked) || 0;
+        const totalCorrect = parseInt(p.correct) || 0;
+        const accuracy = totalChecked > 0 ? Math.round((totalCorrect / totalChecked) * 1000) / 10 : 0;
+
+        const recentRows = await pool.query(
+          `SELECT correct FROM predictions WHERE checked = true ORDER BY match_date DESC LIMIT 20`
+        );
+        let streak = 0;
+        for (const row of recentRows.rows) { if (row.correct) streak++; else break; }
+
+        const targetMatches = totalMatches < 1000 ? 1000 : totalMatches < 5000 ? 5000 : totalMatches < 20000 ? 20000 : 50000;
+        const progress = Math.min(100, Math.round((totalMatches / targetMatches) * 100));
+
+        return sendJSON(res, 200, {
+          training: {
+            totalMatches, targetMatches, progress,
+            level: totalMatches < 500 ? 'Начинаещ' : totalMatches < 5000 ? 'Учи се' : totalMatches < 20000 ? 'Напреднал' : 'Експерт',
+            collectorActive: collectorRunning
+          },
+          predictions: {
+            totalChecked, totalCorrect, accuracy,
+            weekChecked: parseInt(p.week_checked) || 0,
+            weekCorrect: parseInt(p.week_correct) || 0,
+            weekAccuracy: parseInt(p.week_checked) > 0 ? Math.round((parseInt(p.week_correct) / parseInt(p.week_checked)) * 1000) / 10 : 0,
+            todayChecked: parseInt(p.today_checked) || 0,
+            todayCorrect: parseInt(p.today_correct) || 0,
+            streak
+          },
+          weights: {
+            form: Math.round((w.form_weight || 1) * 100) / 100,
+            homeAdvantage: Math.round((w.home_advantage || 1) * 100) / 100,
+            goals: Math.round((w.goals_weight || 1) * 100) / 100,
+            h2h: Math.round((w.h2h_weight || 1) * 100) / 100,
+            injury: Math.round((w.injury_weight || 1) * 100) / 100,
+            fatigue: Math.round((w.fatigue_weight || 1) * 100) / 100,
+            odds: Math.round((w.odds_weight || 1) * 100) / 100,
+            lastUpdated: w.last_updated
+          },
+          apiUsage: {
+            today: apiUsage.count,
+            aiToday: apiUsage.aiCount,
+            siteToday: apiUsage.count - apiUsage.aiCount,
+            limit: 7500,
+            aiLimit: AI_DAILY_LIMIT,
+            siteLimit: SITE_DAILY_LIMIT,
+            remaining: 7500 - apiUsage.count
+          }
+        });
+      } catch(e) {
+        return sendJSON(res, 500, { error: e.message });
       }
     }
 
