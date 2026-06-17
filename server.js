@@ -231,11 +231,30 @@ async function recordVisit(req) {
 // ---------- Помощни за AI прогноза ----------
 
 // Намира отбор по име, връща {id, name, logo} или null
-async function findTeam(name) {
+async function findTeam(name, preferNational) {
   const data = await apiFetch('/teams?search=' + encodeURIComponent(name));
-  const t = (data.response || [])[0];
-  if (!t) return null;
-  return { id: t.team.id, name: t.team.name, logo: t.team.logo, country: t.team.country, founded: t.team.founded };
+  const candidates = data.response || [];
+  if (candidates.length === 0) return null;
+
+  const cleanName = name.trim().toLowerCase();
+
+  // 1) Точно съвпадение по име (най-сигурно)
+  let t = candidates.find(c => c.team.name.toLowerCase() === cleanName);
+
+  // 2) Ако търсим национален отбор, предпочитай team.national === true
+  if (!t && preferNational) {
+    t = candidates.find(c => c.team.national === true);
+  }
+
+  // 3) Ако НЕ търсим национален отбор, избягвай national отборите (избягва грешки като клуб vs нация)
+  if (!t && !preferNational) {
+    t = candidates.find(c => c.team.national === false);
+  }
+
+  // 4) Fallback - първият резултат
+  if (!t) t = candidates[0];
+
+  return { id: t.team.id, name: t.team.name, logo: t.team.logo, country: t.team.country, founded: t.team.founded, national: t.team.national };
 }
 
 // Тегли последните N мача на отбор и смята форма
@@ -1150,16 +1169,30 @@ async function handleApi(req, res, route, method) {
       const homeName = (body.home || '').trim();
       const awayName = (body.away || '').trim();
       const fixtureId = body.fixtureId || null;
+      const homeTeamId = body.homeTeamId || null;
+      const awayTeamId = body.awayTeamId || null;
+      const isNational = !!body.isNational; // true за World Cup / международни турнири
       if (!homeName || !awayName) return sendJSON(res, 400, { error: 'missing_teams' });
 
-      const cacheKey = 'predict:' + homeName.toLowerCase() + ':' + awayName.toLowerCase();
+      const cacheKey = 'predict:' + (homeTeamId || homeName.toLowerCase()) + ':' + (awayTeamId || awayName.toLowerCase());
       const cached = getCached(cacheKey, 600000);
       if (cached) return sendJSON(res, 200, cached);
 
-      const homeTeam = await findTeam(homeName);
-      if (!homeTeam) return sendJSON(res, 404, { error: 'home_not_found', name: homeName });
-      const awayTeam = await findTeam(awayName);
-      if (!awayTeam) return sendJSON(res, 404, { error: 'away_not_found', name: awayName });
+      // Ако вече имаме team ID (от fixture данни) - използваме директно, без търсене по име
+      // Това избягва грешки като Norway->Brann когато имаме точния ID от мача
+      let homeTeam, awayTeam;
+      if (homeTeamId) {
+        homeTeam = { id: homeTeamId, name: homeName, logo: body.homeLogo || null, country: null };
+      } else {
+        homeTeam = await findTeam(homeName, isNational);
+        if (!homeTeam) return sendJSON(res, 404, { error: 'home_not_found', name: homeName });
+      }
+      if (awayTeamId) {
+        awayTeam = { id: awayTeamId, name: awayName, logo: body.awayLogo || null, country: null };
+      } else {
+        awayTeam = await findTeam(awayName, isNational);
+        if (!awayTeam) return sendJSON(res, 404, { error: 'away_not_found', name: awayName });
+      }
 
       // Вземи форма (5 мача) + дълга форма (10 мача) + H2H паралелно
       const [homeForm, awayForm, homeLongForm, awayLongForm, h2h] = await Promise.all([
@@ -1260,6 +1293,52 @@ async function handleApi(req, res, route, method) {
         });
       } catch (e) {
         return sendJSON(res, 200, { weekCorrect: 0, weekTotal: 0, totalChecked: 0, totalCorrect: 0, accuracy: 0, streak: 0 });
+      }
+    }
+
+    // ---------- СВЕТОВНО ПЪРВЕНСТВО 2026 ----------
+    // League ID 1 = FIFA World Cup в API-Football
+    if (route === '/api/worldcup') {
+      if (!API_KEY) return sendJSON(res, 500, { error: 'no_key' });
+      const cached = getCached('worldcup-2026', 120000); // 2 мин кеш
+      if (cached) return sendJSON(res, 200, cached);
+
+      try {
+        const data = await apiFetch('/fixtures?league=1&season=2026');
+        const fixtures = (data.response || []);
+
+        const matches = fixtures.map(f => {
+          const status = f.fixture.status.short;
+          const isLive = ['1H','HT','2H','ET','BT','P','LIVE'].includes(status);
+          const isFinished = ['FT','AET','PEN'].includes(status);
+          return {
+            fixtureId: f.fixture.id,
+            date: f.fixture.date,
+            timestamp: f.fixture.timestamp,
+            status, isLive, isFinished,
+            elapsed: f.fixture.status.elapsed,
+            round: f.league.round,
+            venue: f.fixture.venue ? f.fixture.venue.name : null,
+            home: { id: f.teams.home.id, name: f.teams.home.name, logo: f.teams.home.logo },
+            away: { id: f.teams.away.id, name: f.teams.away.name, logo: f.teams.away.logo },
+            goalsHome: f.goals.home, goalsAway: f.goals.away
+          };
+        });
+
+        // Подреждаме по дата - живи и предстоящи първи
+        matches.sort((a, b) => {
+          if (a.isLive && !b.isLive) return -1;
+          if (!a.isLive && b.isLive) return 1;
+          if (a.isFinished && !b.isFinished) return 1;
+          if (!a.isFinished && b.isFinished) return -1;
+          return new Date(a.date) - new Date(b.date);
+        });
+
+        const result = { count: matches.length, matches };
+        setCached('worldcup-2026', result);
+        return sendJSON(res, 200, result);
+      } catch (e) {
+        return sendJSON(res, 200, { count: 0, matches: [], error: e.message });
       }
     }
 
