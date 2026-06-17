@@ -1637,6 +1637,7 @@
     <li><a href="#" class="active" data-i18n="navHome">Начало</a></li>
     <li><a href="#" data-i18n="navPredictions">Прогнози</a></li>
     <li><a href="#" data-i18n="navLive">На живо</a></li>
+    <li><a href="#" id="navWorldCupLink" data-i18n="navWorldCup">🏆 Световно 2026</a></li>
     <li><a href="#" data-i18n="navStats">Статистики</a></li>
     <li><a href="#" data-i18n="navTools">Инструменти</a></li>
     <li><a href="#" data-i18n="navCommunity">Общност</a></li>
@@ -1819,6 +1820,8 @@
         <div id="sureBetsContainer" style="display:none;"></div>
         <!-- ДНЕС (предстоящи мачове) -->
         <div id="todayMatchesContainer" style="display:none;"></div>
+        <!-- СВЕТОВНО ПЪРВЕНСТВО 2026 -->
+        <div id="worldCupContainer" style="display:none;"></div>
         <div id="liveLoading" class="live-loading" style="display:none;" data-i18n="loading">Зареждане на мачове на живо…</div>
         <div id="liveError" class="live-error" style="display:none;"></div>
 
@@ -2171,6 +2174,7 @@ const translations = {
     navHome:"Начало", navPredictions:"Прогнози", navLive:"На живо", navStats:"Статистики", navTools:"Инструменти", navCommunity:"Общност",
     login:"Вход", proAccess:"PRO достъп",
     leagues:"Лиги", myPredictions:"Моите прогнози", correctThisWeek:"Точни тази седмица", totalAccuracy:"Точност общо", streak:"Серия", streakVal:"5 поредни", inARow:"поредни", confidence:"увереност", aiPick:"AI препоръка", draw:"Равенство", loadingSure:"Анализирам мачове за сигурни залози…", noSureBets:"В момента няма мачове с висока увереност. Провери пак по-късно.", noTodayMatches:"Няма предстоящи мачове за днес.", countdownLabel:"Старт след",
+    navWorldCup:"🏆 Световно 2026", loadingWorldCup:"Зареждам мачове от Световното първенство…", noWorldCupMatches:"Все още няма обявени мачове от Световното първенство 2026.", aiPredictionBtn:"AI Прогноза", loadingPrediction:"Анализирам мача…", predictionError:"Грешка при зареждане на прогнозата.", startingNow:"Започва...", finished:"Краен",
     tools:"Инструменти", toolAI:"AI Прогноза", toolStats:"Статистики", toolH2H:"Директни срещи", toolOdds:"Движение на коефициенти", toolGoals:"Голова статистика", toolCorners:"Корнери & карти", toolInjuries:"Контузии & наредба", toolCalc:"Калкулатор печалба",
     tabLive:"На живо (3)", tabToday:"Днес (14)", tabTomorrow:"Утре (22)", tabTop:"Топ избори", tabSafe:"Сигурни",
     liveMatches:"Срещи на живо", seeAll:"Виж всички →",
@@ -2195,6 +2199,7 @@ const translations = {
     navHome:"Home", navPredictions:"Predictions", navLive:"Live", navStats:"Stats", navTools:"Tools", navCommunity:"Community",
     login:"Log in", proAccess:"PRO access",
     leagues:"Leagues", myPredictions:"My predictions", correctThisWeek:"Correct this week", totalAccuracy:"Total accuracy", streak:"Streak", streakVal:"5 in a row", inARow:"in a row", confidence:"confidence", aiPick:"AI pick", draw:"Draw", loadingSure:"Analyzing matches for safe bets…", noSureBets:"No high-confidence matches right now. Check back later.",
+    navWorldCup:"🏆 World Cup 2026", loadingWorldCup:"Loading World Cup matches…", noWorldCupMatches:"No World Cup 2026 matches announced yet.", aiPredictionBtn:"AI Prediction", loadingPrediction:"Analyzing match…", predictionError:"Error loading prediction.", startingNow:"Starting...", finished:"Finished",
     tools:"Tools", toolAI:"AI Prediction", toolStats:"Stats", toolH2H:"Head-to-head", toolOdds:"Odds movement", toolGoals:"Goal stats", toolCorners:"Corners & cards", toolInjuries:"Injuries & lineup", toolCalc:"Profit calculator",
     tabLive:"Live (3)", tabToday:"Today (14)", tabTomorrow:"Tomorrow (22)", tabTop:"Top picks", tabSafe:"Safe",
     liveMatches:"Live matches", seeAll:"See all \u2192",
@@ -3259,6 +3264,203 @@ function buildSureBetCard(b, dict) {
     '</div></div>';
 }
 
+// ===== СВЕТОВНО ПЪРВЕНСТВО 2026 =====
+// Кеш на предсказанията по fixtureId, за да не правим повторни заявки
+const worldCupPredictionCache = {};
+
+function formatCountdown(ms) {
+  if (ms <= 0) return null;
+  const totalSec = Math.floor(ms / 1000);
+  const days = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  if (days > 0) return `${days}д ${hours}ч ${mins}м`;
+  return `${hours}ч ${mins}м ${secs}с`;
+}
+
+function buildWorldCupCard(m, dict) {
+  const homeLogo = m.home.logo ? '<img src="'+m.home.logo+'" style="width:32px;height:32px;object-fit:contain;">' : '';
+  const awayLogo = m.away.logo ? '<img src="'+m.away.logo+'" style="width:32px;height:32px;object-fit:contain;">' : '';
+  const roundLabel = m.round ? escapeHtmlClient(m.round) : '';
+
+  let statusHtml;
+  if (m.isLive) {
+    statusHtml = '<span class="live-badge">' + (dict.liveBadge || 'НА ЖИВО') + ' ' + (m.elapsed != null ? m.elapsed + "'" : '') + '</span>';
+  } else if (m.isFinished) {
+    statusHtml = '<span style="background:rgba(255,255,255,0.08);color:var(--muted);font-weight:700;font-size:12px;padding:3px 10px;border-radius:20px;" data-i18n="finished">Краен</span>';
+  } else {
+    statusHtml = '<span class="wc-countdown" data-match-ts="' + m.timestamp + '" style="background:rgba(255,211,42,0.12);color:#ffd32a;font-weight:700;font-size:12px;padding:3px 10px;border-radius:20px;">--</span>';
+  }
+
+  const scoreHtml = (m.isLive || m.isFinished)
+    ? '<div class="score">' + (m.goalsHome ?? 0) + ' - ' + (m.goalsAway ?? 0) + '</div>'
+    : '<div class="score" style="font-size:18px;color:var(--muted);">vs</div>';
+
+  return '<div class="match-card wc-match-card' + (m.isLive ? ' live' : '') + '" data-fixture-id="' + m.fixtureId + '">' +
+    '<div class="match-meta"><div class="match-league">🏆 ' + roundLabel + '</div>' + statusHtml + '</div>' +
+    '<div class="match-teams" style="display:flex;align-items:center;justify-content:space-between;margin:10px 0;">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex:1;">' + homeLogo + '<span class="team-name">' + escapeHtmlClient(m.home.name) + '</span></div>' +
+      scoreHtml +
+      '<div style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;"><span class="team-name">' + escapeHtmlClient(m.away.name) + '</span>' + awayLogo + '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;">' +
+      '<button class="ai-prediction-btn wc-ai-btn" data-fixture-id="' + m.fixtureId + '" data-home="' + escapeHtmlClient(m.home.name) + '" data-away="' + escapeHtmlClient(m.away.name) + '" data-home-id="' + m.home.id + '" data-away-id="' + m.away.id + '" data-home-logo="' + (m.home.logo||'') + '" data-away-logo="' + (m.away.logo||'') + '" style="flex:1;">' +
+        '🤖 ' + (dict.aiPredictionBtn || 'AI Прогноза') +
+      '</button>' +
+    '</div>' +
+    '<div class="wc-ai-result" id="wc-ai-result-' + m.fixtureId + '" style="display:none;margin-top:10px;"></div>' +
+  '</div>';
+}
+
+function buildWorldCupAIResult(pred, dict, homeName, awayName) {
+  const pickLabel = pred.prediction.pickType === '1' ? homeName : (pred.prediction.pickType === '2' ? awayName : (dict.draw || 'Равенство'));
+  return '<div style="background:rgba(0,255,135,0.08);border:1.5px solid var(--gold);border-radius:10px;padding:12px;">' +
+    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
+      '<div style="text-align:center;flex:1;"><div style="font-size:20px;font-weight:800;color:var(--green);">' + pred.prediction.homePct + '%</div><div style="font-size:11px;color:var(--muted);">1 ' + escapeHtmlClient(homeName) + '</div></div>' +
+      '<div style="text-align:center;flex:1;"><div style="font-size:20px;font-weight:800;">' + pred.prediction.drawPct + '%</div><div style="font-size:11px;color:var(--muted);">X</div></div>' +
+      '<div style="text-align:center;flex:1;"><div style="font-size:20px;font-weight:800;color:var(--green);">' + pred.prediction.awayPct + '%</div><div style="font-size:11px;color:var(--muted);">2 ' + escapeHtmlClient(awayName) + '</div></div>' +
+    '</div>' +
+    '<div style="text-align:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);">' +
+      '<span style="font-size:12px;color:var(--muted);">' + (dict.aiPick || 'AI препоръка') + ': </span>' +
+      '<span style="font-weight:800;color:var(--green);">' + escapeHtmlClient(pickLabel) + '</span>' +
+      '<span style="font-size:11px;color:var(--muted);"> (' + pred.prediction.confidence + '%)</span>' +
+    '</div>' +
+  '</div>';
+}
+
+async function loadWorldCupMatches() {
+  const dict = translations[currentLang()];
+  const container = document.getElementById('worldCupContainer');
+  const loading = document.getElementById('liveLoading');
+  if (!container) return;
+  container.innerHTML = '';
+  loading.style.display = 'block';
+  loading.textContent = dict.loadingWorldCup || 'Зареждам мачове от Световното първенство…';
+  try {
+    const res = await fetch('/api/worldcup');
+    const d = await res.json();
+    loading.style.display = 'none';
+    if (d.matches && d.matches.length > 0) {
+      container.innerHTML = d.matches.map(m => buildWorldCupCard(m, dict)).join('');
+      startWorldCupCountdowns();
+      attachWorldCupAIHandlers();
+    } else {
+      container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">' + (dict.noWorldCupMatches || 'Все още няма обявени мачове от Световното първенство 2026.') + '</div>';
+    }
+  } catch (e) {
+    loading.style.display = 'none';
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">' + (dict.noWorldCupMatches || 'Грешка при зареждане на мачовете.') + '</div>';
+  }
+}
+
+let worldCupCountdownIntervals = [];
+function clearWorldCupCountdowns() {
+  worldCupCountdownIntervals.forEach(id => clearInterval(id));
+  worldCupCountdownIntervals = [];
+}
+
+function startWorldCupCountdowns() {
+  clearWorldCupCountdowns();
+  document.querySelectorAll('.wc-countdown').forEach(el => {
+    const ts = parseInt(el.getAttribute('data-match-ts'), 10) * 1000;
+    const update = () => {
+      const diff = ts - Date.now();
+      const label = formatCountdown(diff);
+      if (!label) {
+        el.textContent = translations[currentLang()].startingNow || 'Започва...';
+        return;
+      }
+      el.textContent = (translations[currentLang()].countdownLabel || 'Старт след') + ': ' + label;
+    };
+    update();
+    const id = setInterval(update, 1000);
+    worldCupCountdownIntervals.push(id);
+  });
+}
+
+function attachWorldCupAIHandlers() {
+  document.querySelectorAll('.wc-ai-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const fixtureId = btn.getAttribute('data-fixture-id');
+      const home = btn.getAttribute('data-home');
+      const away = btn.getAttribute('data-away');
+      const homeId = btn.getAttribute('data-home-id');
+      const awayId = btn.getAttribute('data-away-id');
+      const homeLogo = btn.getAttribute('data-home-logo');
+      const awayLogo = btn.getAttribute('data-away-logo');
+      const dict = translations[currentLang()];
+      const resultDiv = document.getElementById('wc-ai-result-' + fixtureId);
+      if (!resultDiv) return;
+
+      resultDiv.style.display = 'block';
+
+      if (worldCupPredictionCache[fixtureId]) {
+        resultDiv.innerHTML = buildWorldCupAIResult(worldCupPredictionCache[fixtureId], dict, home, away);
+        return;
+      }
+
+      resultDiv.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted);">' + (dict.loadingPrediction || 'Анализирам мача…') + '</div>';
+
+      try {
+        const res = await fetch('/api/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            home, away, fixtureId,
+            homeTeamId: homeId ? parseInt(homeId, 10) : null,
+            awayTeamId: awayId ? parseInt(awayId, 10) : null,
+            homeLogo, awayLogo,
+            isNational: true
+          })
+        });
+        const data = await res.json();
+        if (data.prediction) {
+          worldCupPredictionCache[fixtureId] = data;
+          resultDiv.innerHTML = buildWorldCupAIResult(data, dict, home, away);
+        } else {
+          resultDiv.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted);">' + (dict.predictionError || 'Не успях да направя прогноза за този мач.') + '</div>';
+        }
+      } catch (e) {
+        resultDiv.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted);">' + (dict.predictionError || 'Грешка при зареждане на прогнозата.') + '</div>';
+      }
+    });
+  });
+}
+
+// Бутон в навигацията за Световното първенство
+document.addEventListener('DOMContentLoaded', () => {
+  const wcLink = document.getElementById('navWorldCupLink');
+  if (wcLink) {
+    wcLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      wcLink.classList.add('active');
+
+      const liveC = document.getElementById('liveMatchesContainer');
+      const sureC = document.getElementById('sureBetsContainer');
+      const todayC = document.getElementById('todayMatchesContainer');
+      const wcC = document.getElementById('worldCupContainer');
+      const demo = document.getElementById('demoMatches');
+      if (liveC) liveC.style.display = 'none';
+      if (sureC) sureC.style.display = 'none';
+      if (todayC) todayC.style.display = 'none';
+      if (demo) demo.style.display = 'none';
+      clearCountdowns();
+      document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+
+      if (wcC) wcC.style.display = 'block';
+      loadWorldCupMatches();
+
+      // скролваме до секцията
+      const toolsSection = document.querySelector('.tabs');
+      if (toolsSection) toolsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+});
+
+
+
 async function loadSureBets() {
   const dict = translations[currentLang()];
   const container = document.getElementById('sureBetsContainer');
@@ -3412,12 +3614,14 @@ document.querySelectorAll('.tabs .tab').forEach(tab => {
     const liveC = document.getElementById('liveMatchesContainer');
     const sureC = document.getElementById('sureBetsContainer');
     const todayC = document.getElementById('todayMatchesContainer');
+    const wcC = document.getElementById('worldCupContainer');
     const demo = document.getElementById('demoMatches');
 
     // Скриваме всичко
     if (liveC) liveC.style.display = 'none';
     if (sureC) sureC.style.display = 'none';
     if (todayC) todayC.style.display = 'none';
+    if (wcC) wcC.style.display = 'none';
     if (demo) demo.style.display = 'none';
     clearCountdowns();
 
